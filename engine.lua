@@ -338,42 +338,42 @@ function engine.newScene(renderWidth,renderHeight)
         t:translate(t, p)
         self.threeShader:send("view", Camera.perspective * TransposeMatrix(Camera.transform))
         
-        local lightPos = {}
-        local lightPower = {}
-        local lightColor = {}
-        local lightVector = {}
-        local lightScatter = {}
-        local lightHasVector = {}
-        for i=1, self.lightListLength do
-            lightPos[i] = nil
-            lightPower[i] = nil
-            lightColor[i] = nil
-            lightVector[i] = nil
-            lightScatter[i] = nil
-            lightHasVector[i] = nil
-
-            if i <= #self.lightList then
-                local this = self.lightList[i]
-                if this ~= nil then
-                    lightPos[i] = {this.x,this.y,this.z}
-                    lightPower[i] = this.power
-                    lightColor[i] = this.color
-                    lightVector[i] = this.vector
-                    lightScatter[i] = this.scatter
-                    lightHasVector[i] = this.hasVector
-                end
-            end
-        end
+        --local lightPos = {}
+        --local lightPower = {}
+        --local lightColor = {}
+        --local lightVector = {}
+        --local lightScatter = {}
+        --local lightHasVector = {}
+        --for i=1, self.lightListLength do
+            --lightPos[i] = nil
+            --lightPower[i] = nil
+            --lightColor[i] = nil
+            --lightVector[i] = nil
+            --lightScatter[i] = nil
+            --lightHasVector[i] = nil
+--
+            --if i <= #self.lightList then
+                --local this = self.lightList[i]
+                --if this ~= nil then
+                    --lightPos[i] = {this.x,this.y,this.z}
+                    --lightPower[i] = this.power
+                    --lightColor[i] = this.color
+                    --lightVector[i] = this.vector
+                    --lightScatter[i] = this.scatter
+                    --lightHasVector[i] = this.hasVector
+                --end
+            --end
+        --end
 
         --self.threeShader:send("light_count", #self.lightList)
-        if #self.lightList > 0 then
+        --if #self.lightList > 0 then
             --self.threeShader:send("light_source", unpack(lightPos))
             --self.threeShader:send("light_power", unpack(lightPower))
             --self.threeShader:send("light_color", unpack(lightColor))
             --self.threeShader:send("light_vector", unpack(lightVector))
             --self.threeShader:send("light_scatter", unpack(lightScatter))
             --self.threeShader:send("light_hasVector", unpack(lightHasVector))
-        end
+        --end
         --self.threeShader:send("ambient", self.ambientLight)
         
         for i=1, #self.modelList do

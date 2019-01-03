@@ -10,7 +10,7 @@ function love.load()
     Scene = Engine.newScene(GraphicsWidth, GraphicsHeight)
     Scene.camera.perspective = TransposeMatrix(cpml.mat4.from_perspective(90, love.graphics.getWidth()/love.graphics.getHeight(), 0.1, 10000))
 
-    DefaultTexture = love.graphics.newImage("/textures/wall128.png")
+    DefaultTexture = love.graphics.newImage("texture.png")
     TileTexture = love.graphics.newImage("terrain.png")
 
     ChunkSize = 16
@@ -225,9 +225,6 @@ function NewPlayer(x,y,z)
             moving = true
         end
 
-        if love.keyboard.isDown("lshift") then
-            self.y = self.y - dt*4
-        end
         if love.keyboard.isDown("space") and self.onGround then
             self.ySpeed = self.ySpeed + 0.165
         end
@@ -241,19 +238,23 @@ function NewPlayer(x,y,z)
         if not TileEnums(GetVoxel(self.x+self.xSpeed,self.y,self.z)).isSolid
         and not TileEnums(GetVoxel(self.x+self.xSpeed,self.y-1,self.z)).isSolid then
             self.x = self.x + self.xSpeed
+        else
+            self.xSpeed = 0
         end
         if not TileEnums(GetVoxel(self.x,self.y,self.z+self.zSpeed)).isSolid
         and not TileEnums(GetVoxel(self.x,self.y-1,self.z+self.zSpeed)).isSolid then
             self.z = self.z + self.zSpeed
+        else
+            self.zSpeed = 0
         end
         self.y = self.y + self.ySpeed
 
         local speed = math.dist(0,0, self.xSpeed,self.zSpeed)
-        self.viewBob = self.viewBob + speed*0.7
+        self.viewBob = self.viewBob + speed*2
         self.viewBobMult = math.min(speed, 1)
 
         Scene.camera.pos.x = self.x
-        Scene.camera.pos.y = self.y + math.sin(self.viewBob)*self.viewBobMult*1.5
+        Scene.camera.pos.y = self.y + math.sin(self.viewBob)*self.viewBobMult*0.5
         Scene.camera.pos.z = self.z
 
         local rx,ry,rz = Scene.camera.pos.x,Scene.camera.pos.y,Scene.camera.pos.z
@@ -295,53 +296,49 @@ function NewVoxelCursor(x,y,z)
     local scale = 1.002
     local x,y,z = -0.001,-0.001,-0.001
 
-    -- bottom
-    model[#model+1] = {x, y, z}
-    model[#model+1] = {x+scale, y, z}
-    model[#model+1] = {x, y, z+scale}
-    model[#model+1] = {x+scale, y, z+scale}
-    model[#model+1] = {x+scale, y, z}
-    model[#model+1] = {x, y, z+scale}
     -- top
     model[#model+1] = {x, y+scale, z}
     model[#model+1] = {x, y+scale, z}
     model[#model+1] = {x, y+scale, z+scale}
     model[#model+1] = {x+scale, y+scale, z+scale}
-    model[#model+1] = {x+scale, y+scale, z}
-    model[#model+1] = {x, y+scale, z+scale}
-
-    -- positive x
-    model[#model+1] = {x+scale, y, z}
-    model[#model+1] = {x+scale, y+scale, z}
-    model[#model+1] = {x+scale, y, z+scale}
     model[#model+1] = {x+scale, y+scale, z+scale}
     model[#model+1] = {x+scale, y+scale, z}
-    model[#model+1] = {x+scale, y, z+scale}
-    -- negative x
-    model[#model+1] = {x, y, z}
-    model[#model+1] = {x, y+scale, z}
-    model[#model+1] = {x, y, z+scale}
-    model[#model+1] = {x, y+scale, z+scale}
-    model[#model+1] = {x, y+scale, z}
-    model[#model+1] = {x, y, z+scale}
-
-    -- positive z
-    model[#model+1] = {x, y, z+scale}
-    model[#model+1] = {x, y+scale, z+scale}
-    model[#model+1] = {x+scale, y, z+scale}
+    model[#model+1] = {x+scale, y+scale, z+scale}
     model[#model+1] = {x+scale, y+scale, z+scale}
     model[#model+1] = {x, y+scale, z+scale}
-    model[#model+1] = {x+scale, y, z+scale}
-    -- negative z
-    model[#model+1] = {x, y, z}
-    model[#model+1] = {x, y+scale, z}
-    model[#model+1] = {x+scale, y, z}
+    model[#model+1] = {x+scale, y+scale, z}
     model[#model+1] = {x+scale, y+scale, z}
     model[#model+1] = {x, y+scale, z}
-    model[#model+1] = {x+scale, y, z}
 
-    local compmodel = Engine.newModel(Engine.luaModelLoader(model), DefaultTexture, {0,0,0})
-    compmodel.color = {0,0,0}
+    -- bottom
+    model[#model+1] = {x, y, z}
+    model[#model+1] = {x, y, z}
+    model[#model+1] = {x, y, z+scale}
+    model[#model+1] = {x+scale, y, z+scale}
+    model[#model+1] = {x+scale, y, z+scale}
+    model[#model+1] = {x+scale, y, z}
+    model[#model+1] = {x+scale, y, z+scale}
+    model[#model+1] = {x+scale, y, z+scale}
+    model[#model+1] = {x, y, z+scale}
+    model[#model+1] = {x+scale, y, z}
+    model[#model+1] = {x+scale, y, z}
+    model[#model+1] = {x, y, z}
+
+    -- sides
+    model[#model+1] = {x, y+scale, z}
+    model[#model+1] = {x, y+scale, z}
+    model[#model+1] = {x, y, z}
+    model[#model+1] = {x+scale, y+scale, z}
+    model[#model+1] = {x+scale, y+scale, z}
+    model[#model+1] = {x+scale, y, z}
+    model[#model+1] = {x, y+scale, z+scale}
+    model[#model+1] = {x, y+scale, z+scale}
+    model[#model+1] = {x, y, z+scale}
+    model[#model+1] = {x+scale, y+scale, z+scale}
+    model[#model+1] = {x+scale, y+scale, z+scale}
+    model[#model+1] = {x+scale, y, z+scale}
+
+    local compmodel = Engine.newModel(Engine.luaModelLoader(model), nil, {0,0,0}, {0,0,0})
     compmodel.wireframe = true
     t:assignModel(compmodel)
 

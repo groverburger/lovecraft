@@ -202,9 +202,17 @@ function NewChunkSlice(x,y,z, parent)
             end
         end
 
-        if #model > 0 then
-            self:assignModel(Engine.newModel(Engine.luaModelLoader(model), TileTexture, {0,0,0}))
+        local visible = true
+        -- models can't be deleted easily, so make it invisible when no verts in mesh
+        if #model == 0 then
+            model[#model+1] = {0, 0, 0}
+            model[#model+1] = {1, 0, 0}
+            model[#model+1] = {0, 1, 0}
+            visible = false
         end
+        local compmodel = Engine.newModel(Engine.luaModelLoader(model), TileTexture, {0,0,0})
+        compmodel.visible = visible
+        self:assignModel(compmodel)
     end
 
     t:updateModel()
