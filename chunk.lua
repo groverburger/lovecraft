@@ -1,51 +1,54 @@
+function ReplaceChar(str, pos, r)
+    return str:sub(1, pos-1) .. r .. str:sub(pos+#r)
+end
+
 function NewChunk(x,z)
     local chunk = NewThing(x,0,z)
     chunk.voxels = {}
     chunk.slices = {}
 
     -- chunk generation
-    for i=1, ChunkSize do
-        chunk.voxels[i] = {}
-        for j=WorldHeight, 1, -1 do
-            chunk.voxels[i][j] = {}
-            for k=1, ChunkSize do
-                chunk.voxels[i][j][k] = 0
-            end
-        end
-    end
-
-    local dirt = 6
+    local dirt = 4
     local grass = true
     local freq = 16
-    local yfreq = 32
+    local yfreq = 12
     local floor = 48
     local ceiling = 120
     for i=1, ChunkSize do
+        chunk.voxels[i] = {}
         for k=1, ChunkSize do
-            for j=WorldHeight, 1, -1 do
+            local temp = {}
+
+            for j=WorldHeight, 1,-1 do
                 local xx = (x-1)*ChunkSize + i
                 local zz = (z-1)*ChunkSize + k
+                local yy = (j-1)*2 +1
+                temp[yy+1] = string.char(0)
                 if j < floor then
-                    chunk.voxels[i][j][k] = 1
+                    temp[yy] = string.char(1)
                 else
+                    temp[yy] = string.char(0)
+
                     if love.math.noise(xx/freq,j/(yfreq),zz/freq) > (j-floor)/(ceiling-floor) then
                         if not grass then
                             if dirt > 0 then
                                 dirt = dirt - 1
-                                chunk.voxels[i][j][k] = 3
+                                temp[yy] = string.char(3)
                             else
-                                chunk.voxels[i][j][k] = 1
+                                temp[yy] = string.char(1)
                             end
                         else
                             grass = false
-                            chunk.voxels[i][j][k] = 2
+                            temp[yy] = string.char(2)
                         end
                     else
                         grass = true
-                        dirt = 6
+                        dirt = 4
                     end
                 end
             end
+
+            chunk.voxels[i][k] = table.concat(temp)
         end
     end
 
@@ -56,7 +59,7 @@ function NewChunk(x,z)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
-            return self.voxels[x][y][z]
+            return string.byte(self.voxels[x][z]:sub((y-1)*2 +1,(y-1)*2 +1))
         end
 
         return 0
@@ -69,7 +72,7 @@ function NewChunk(x,z)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
-            self.voxels[x][y][z] = value
+            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value)..string.char(0))
         end
     end
 

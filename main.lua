@@ -364,14 +364,17 @@ function love.draw()
     Scene:render(false)
     Scene:renderFunction(
         function ()
+            love.graphics.setColor(0,0,0)
             love.graphics.print(ThePlayer.x.."\n"..ThePlayer.y.."\n"..ThePlayer.z)
             local chunk, cx,cy,cz, hashx,hashy = GetChunk(ThePlayer.x,ThePlayer.y,ThePlayer.z)
             if chunk ~= nil then
-                love.graphics.print(chunk:getVoxel(cx,cy,cz),0,50)
+                love.graphics.print(collectgarbage('count'),0,50)
+                love.graphics.print(#chunk.voxels[1][1], 0,70)
             end
         end, false
     )
 
+    love.graphics.setColor(1,1,1)
     local scale = love.graphics.getWidth()/GraphicsWidth
     love.graphics.draw(Scene.threeCanvas, love.graphics.getWidth()/2,love.graphics.getHeight()/2, 0, scale,-1*scale, GraphicsWidth/2, GraphicsHeight/2)
     love.graphics.draw(Scene.twoCanvas, love.graphics.getWidth()/2,love.graphics.getHeight()/2 +1, 0, scale,scale, GraphicsWidth/2, GraphicsHeight/2)
