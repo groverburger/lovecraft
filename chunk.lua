@@ -2,6 +2,12 @@ function ReplaceChar(str, pos, r)
     return str:sub(1, pos-1) .. r .. str:sub(pos+#r)
 end
 
+function ChunkNoise(x,y,z)
+    local freq = 16
+    local yfreq = 12
+    return love.math.noise(x/freq + Salt[1]*100000,y/yfreq + Salt[2]*100000,z/freq + Salt[3]*100000)
+end
+
 function NewChunk(x,z)
     local chunk = NewThing(x,0,z)
     chunk.voxels = {}
@@ -10,8 +16,6 @@ function NewChunk(x,z)
     -- chunk generation
     local dirt = 4
     local grass = true
-    local freq = 16
-    local yfreq = 12
     local floor = 48
     local ceiling = 120
     for i=1, ChunkSize do
@@ -19,17 +23,24 @@ function NewChunk(x,z)
         for k=1, ChunkSize do
             local temp = {}
 
+            local sunlight = true
             for j=WorldHeight, 1,-1 do
                 local xx = (x-1)*ChunkSize + i
                 local zz = (z-1)*ChunkSize + k
                 local yy = (j-1)*2 +1
-                temp[yy+1] = string.char(0)
+                
+                temp[yy+1] = string.char(8)
+                if sunlight then
+                    temp[yy+1] = string.char(0)
+                end
+
                 if j < floor then
                     temp[yy] = string.char(1)
+                    sunlight = false
                 else
                     temp[yy] = string.char(0)
 
-                    if love.math.noise(xx/freq,j/(yfreq),zz/freq) > (j-floor)/(ceiling-floor) then
+                    if ChunkNoise(xx,j,zz) > (j-floor)/(ceiling-floor) then
                         if not grass then
                             if dirt > 0 then
                                 dirt = dirt - 1
@@ -41,6 +52,7 @@ function NewChunk(x,z)
                             grass = false
                             temp[yy] = string.char(2)
                         end
+                        sunlight = false
                     else
                         grass = true
                         dirt = 4
@@ -59,10 +71,10 @@ function NewChunk(x,z)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
-            return string.byte(self.voxels[x][z]:sub((y-1)*2 +1,(y-1)*2 +1))
+            return string.byte(self.voxels[x][z]:sub((y-1)*2 +1,(y-1)*2 +1)), string.byte(self.voxels[x][z]:sub((y-1)*2 +2,(y-1)*2 +2))
         end
 
-        return 0
+        return 0, 0
     end
 
     chunk.setVoxel = function (self, x,y,z, value)
@@ -108,34 +120,37 @@ function NewChunkSlice(x,y,z, parent)
         for i=1, ChunkSize do
             for j=self.y, self.y+SliceHeight do
                 for k=1, ChunkSize do
-                    local this = self.parent:getVoxel(i,j,k)
+                    local this, thisLight = self.parent:getVoxel(i,j,k)
                     local scale = 1
                     local x,y,z = (self.x-1)*ChunkSize + i-1, 1*j*scale, (self.z-1)*ChunkSize + k-1
 
                     if this ~= 0 then
                         local otx,oty = NumberToCoord(TileEnums(this).texture[1], 16,16)
+                        otx = otx+16*thisLight
                         local otx2,oty2 = otx+1,oty+1
 
-                        tx,ty = otx*TileWidth,oty*TileHeight
-                        tx2,ty2 = otx2*TileWidth,oty2*TileHeight
+                        tx,ty = otx*TileWidth/LightValues,oty*TileHeight
+                        tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
 
                         local utx,uty = tx,ty
                         local utx2,uty2 = tx2,ty2
                         if #TileEnums(this).texture > 1 then
                             utx,uty = NumberToCoord(TileEnums(this).texture[2], 16,16)
+                            utx = utx+16*thisLight
                             utx2,uty2 = utx+1,uty+1
 
-                            utx,uty = utx*TileWidth,uty*TileHeight
-                            utx2,uty2 = utx2*TileWidth,uty2*TileHeight
+                            utx,uty = utx*TileWidth/LightValues,uty*TileHeight
+                            utx2,uty2 = utx2*TileWidth/LightValues,uty2*TileHeight
                         end
                         local dtx,dty = tx,ty
                         local dtx2,dty2 = tx2,ty2
                         if #TileEnums(this).texture > 2 then
                             dtx,dty = NumberToCoord(TileEnums(this).texture[3], 16,16)
+                            dtx = dtx+16*thisLight
                             dtx2,dty2 = dtx+1,dty+1
 
-                            dtx,dty = dtx*TileWidth,dty*TileHeight
-                            dtx2,dty2 = dtx2*TileWidth,dty2*TileHeight
+                            dtx,dty = dtx*TileWidth/LightValues,dty*TileHeight
+                            dtx2,dty2 = dtx2*TileWidth/LightValues,dty2*TileHeight
                         end
 
                         -- bottom
@@ -213,7 +228,7 @@ function NewChunkSlice(x,y,z, parent)
             model[#model+1] = {0, 1, 0}
             visible = false
         end
-        local compmodel = Engine.newModel(Engine.luaModelLoader(model), TileTexture, {0,0,0})
+        local compmodel = Engine.newModel(Engine.luaModelLoader(model), LightingTexture, {0,0,0})
         compmodel.visible = visible
         self:assignModel(compmodel)
     end

@@ -30,34 +30,6 @@ function engine.luaModelLoader(model)
             this[4] = get[4]
             this[5] = get[5]
         end
-
-        -- if this doesn't have normals figure them out
-        if #get < 8 then
-            local polyindex = math.floor((i-1)/3)
-            local polyfirst = polyindex*3 +1
-            local polysecond = polyindex*3 +2
-            local polythird = polyindex*3 +3
-
-            local sn1 = {}
-            sn1[1] = model[polythird][1] - model[polysecond][1]
-            sn1[2] = model[polythird][2] - model[polysecond][2]
-            sn1[3] = model[polythird][3] - model[polysecond][3]
-
-            local sn2 = {}
-            sn2[1] = model[polysecond][1] - model[polyfirst][1]
-            sn2[2] = model[polysecond][2] - model[polyfirst][2]
-            sn2[3] = model[polysecond][3] - model[polyfirst][3]
-
-            local cross = UnitVectorOf(CrossProduct(sn1,sn2))
-
-            this[6] = cross[1]
-            this[7] = cross[2]
-            this[8] = cross[3]
-        else
-            this[6] = get[6]
-            this[7] = get[7]
-            this[8] = get[8]
-        end
     end
 
     return newModel
@@ -108,7 +80,7 @@ function engine.newModel(verts, texture, coords, color, format)
         format = { 
             {"VertexPosition", "float", 3}, 
             {"VertexTexCoord", "float", 2}, 
-            {"VertexNormal", "float", 3}, 
+            --{"VertexNormal", "float", 3}, 
         }
     end
 
@@ -131,7 +103,6 @@ function engine.newModel(verts, texture, coords, color, format)
     m.color = color
     m.visible = true
     m.dead = false
-    m.lightable = true
     m.wireframe = false
 
     m.setTransform = function (self, coords, rotations)
@@ -221,8 +192,6 @@ function engine.newScene(renderWidth,renderHeight)
 
         vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) 
         {
-            vec3 light = vec3(0,0,0);
-            float diffuse = 0;
             vec4 texturecolor = Texel(texture, texture_coords);
 
             //if the alpha here is close to zero just don't draw anything here
@@ -245,50 +214,13 @@ function engine.newScene(renderWidth,renderHeight)
     }
 
     scene.modelList = {}
-    scene.lightList = {}
-    scene.lightListLength = 128
 
     scene.renderWidth = renderWidth
     scene.renderHeight = renderHeight
     scene.threeCanvas = love.graphics.newCanvas(renderWidth, renderHeight)
     scene.twoCanvas = love.graphics.newCanvas(renderWidth, renderHeight)
-    scene.ambientLight = 0.5
-
-    scene.newLight = function (self, x,y,z)
-        local l = {}
-        l.dead = false
-        l.x = x
-        l.y = y
-        l.z = z
-        l.power = 1000
-        l.scatter = 1
-        l.vector = {1,1,1}
-        l.hasVector = false
-        l.color = {1,1,1}
-
-        l.destroy = function (self)
-            self.dead = true
-        end
-
-        l.deathQuery = function (self)
-            return not self.dead
-        end
-
-        table.insert(self.lightList, l)
-        return l
-    end
 
     scene.update = function (self)
-        local i = 1
-        while i<=#(self.lightList) do
-            local thing = self.lightList[i]
-            if thing:deathQuery() then
-                i=i+1
-            else
-                table.remove(self.lightList, i)
-            end
-        end
-
         local i = 1
         while i<=#(self.modelList) do
             local thing = self.modelList[i]
@@ -338,51 +270,12 @@ function engine.newScene(renderWidth,renderHeight)
         t:translate(t, p)
         self.threeShader:send("view", Camera.perspective * TransposeMatrix(Camera.transform))
         
-        --local lightPos = {}
-        --local lightPower = {}
-        --local lightColor = {}
-        --local lightVector = {}
-        --local lightScatter = {}
-        --local lightHasVector = {}
-        --for i=1, self.lightListLength do
-            --lightPos[i] = nil
-            --lightPower[i] = nil
-            --lightColor[i] = nil
-            --lightVector[i] = nil
-            --lightScatter[i] = nil
-            --lightHasVector[i] = nil
---
-            --if i <= #self.lightList then
-                --local this = self.lightList[i]
-                --if this ~= nil then
-                    --lightPos[i] = {this.x,this.y,this.z}
-                    --lightPower[i] = this.power
-                    --lightColor[i] = this.color
-                    --lightVector[i] = this.vector
-                    --lightScatter[i] = this.scatter
-                    --lightHasVector[i] = this.hasVector
-                --end
-            --end
-        --end
-
-        --self.threeShader:send("light_count", #self.lightList)
-        --if #self.lightList > 0 then
-            --self.threeShader:send("light_source", unpack(lightPos))
-            --self.threeShader:send("light_power", unpack(lightPower))
-            --self.threeShader:send("light_color", unpack(lightColor))
-            --self.threeShader:send("light_vector", unpack(lightVector))
-            --self.threeShader:send("light_scatter", unpack(lightScatter))
-            --self.threeShader:send("light_hasVector", unpack(lightHasVector))
-        --end
-        --self.threeShader:send("ambient", self.ambientLight)
-        
         for i=1, #self.modelList do
             local model = self.modelList[i]
             if model ~= nil and model.visible then
                 self.threeShader:send("model_matrix", model.transform)
                 -- need the inverse to compute normals when model is rotated
                 self.threeShader:send("model_matrix_inverse", TransposeMatrix(InvertMatrix(model.transform)))
-                --self.threeShader:send("modelLightable", model.lightable)
                 love.graphics.setWireframe(model.wireframe)
                 love.graphics.draw(model.mesh, -self.renderWidth/2, -self.renderHeight/2)
                 love.graphics.setWireframe(false)

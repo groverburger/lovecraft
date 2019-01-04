@@ -10,8 +10,24 @@ function love.load()
     Scene = Engine.newScene(GraphicsWidth, GraphicsHeight)
     Scene.camera.perspective = TransposeMatrix(cpml.mat4.from_perspective(90, love.graphics.getWidth()/love.graphics.getHeight(), 0.1, 10000))
 
+    LightValues = 16
     DefaultTexture = love.graphics.newImage("texture.png")
     TileTexture = love.graphics.newImage("terrain.png")
+
+    local width, height = TileTexture:getWidth(), TileTexture:getHeight()
+    LightingTexture = love.graphics.newCanvas(width*LightValues, height)
+    local mult = 1
+    love.graphics.setCanvas(LightingTexture)
+    for i=LightValues, 1, -1 do
+        local xx = (i-1)*width
+        love.graphics.setColor(1,1,1)
+        love.graphics.draw(TileTexture, xx,0)
+        love.graphics.setColor(0,0,0, mult)
+        love.graphics.rectangle("fill", xx,0, xx+width, height)
+        love.graphics.setColor(1,1,1)
+        mult = mult * 0.8
+    end
+    love.graphics.setCanvas()
 
     ChunkSize = 16
     SliceHeight = 8
