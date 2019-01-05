@@ -11,65 +11,16 @@ engine.objFormat = {
     {"VertexNormal", "float", 3}, 
 }
 
-function engine.luaModelLoader(model)
-    local newModel = {}
-    for i=1, #model do
-        local get = model[i]
-        newModel[i] = {}
-        local this = newModel[i]
 
-        this[1] = get[1]*1
-        this[2] = get[2]*1
-        this[3] = get[3]*1
-
-        -- if this doesn't have uv coordinates just put in random ones
-        if #get < 5 then
-            this[4] = love.math.random()
-            this[5] = love.math.random()
-        else
-            this[4] = get[4]
-            this[5] = get[5]
-        end
-    end
-
-    return newModel
-end
-
-function engine.scaleVerts(verts, sx,sy,sz)
-    if sy == nil then
-        sy = sx
-        sz = sx
-    end
-
-    for i=1, #verts do
-        local this = verts[i]
-        this[1] = this[1]*sx
-        this[2] = this[2]*sy
-        this[3] = this[3]*sz
-    end
-
-    return verts
-end
-function engine.moveVerts(verts, sx,sy,sz)
-    if sy == nil then
-        sy = sx
-        sz = sx
-    end
-
-    for i=1, #verts do
-        local this = verts[i]
-        this[1] = this[1]+sx
-        this[2] = this[2]+sy
-        this[3] = this[3]+sz
-    end
-
-    return verts
-end
-
-
+-- create a new Model object
+-- given a table of verts for example: { {0,0,0}, {0,1,0}, {0,0,1} }
+-- each vert is its own table that contains three coordinate numbers, and may contain 2 extra numbers as uv coordinates
+-- another example, this with uvs: { {0,0,0, 0,0}, {0,1,0, 1,0}, {0,0,1, 0,1} }
+-- polygons are automatically created with three consecutive verts
 function engine.newModel(verts, texture, coords, color, format)
     local m = {}
 
+    -- default values if no arguments are given
     if coords == nil then
         coords = {0,0,0}
     end
@@ -80,22 +31,29 @@ function engine.newModel(verts, texture, coords, color, format)
         format = { 
             {"VertexPosition", "float", 3}, 
             {"VertexTexCoord", "float", 2}, 
-            --{"VertexNormal", "float", 3}, 
         }
     end
-
-    for i=1, #verts do
-        verts[i][1] = verts[i][1] + coords[1]
-        verts[i][2] = verts[i][2] + coords[2]
-        verts[i][3] = verts[i][3] + coords[3]
-    end
-
     if texture == nil then
         texture = love.graphics.newCanvas(1,1)
         love.graphics.setCanvas(texture)
         love.graphics.clear(unpack(color))
         love.graphics.setCanvas()
     end
+
+    -- translate verts by given coords
+    for i=1, #verts do
+        verts[i][1] = verts[i][1] + coords[1]
+        verts[i][2] = verts[i][2] + coords[2]
+        verts[i][3] = verts[i][3] + coords[3]
+
+        -- if not given uv coordinates, put in random ones
+        if #verts[i] < 5 then
+            verts[i][4] = love.math.random()
+            verts[i][5] = love.math.random()
+        end
+    end
+
+    -- define the Model object's properties
 	m.mesh = love.graphics.newMesh(format, verts, "triangles")
     m.mesh:setTexture(texture)
     m.verts = verts
@@ -105,6 +63,7 @@ function engine.newModel(verts, texture, coords, color, format)
     m.dead = false
     m.wireframe = false
 
+    -- translate and rotate the Model
     m.setTransform = function (self, coords, rotations)
         if angle == nil then
             angle = 0
@@ -120,6 +79,7 @@ function engine.newModel(verts, texture, coords, color, format)
         self.transform = TransposeMatrix(self.transform)
     end
 
+    -- returns a list of the verts this Model contains
     m.getVerts = function (self)
         local ret = {}
         for i=1, #self.verts do
@@ -129,6 +89,7 @@ function engine.newModel(verts, texture, coords, color, format)
         return ret
     end
 
+    -- prints a list of the verts this Model contains
     m.printVerts = function (self)
         local verts = self:getVerts()
         for i=1, #verts do
@@ -139,10 +100,13 @@ function engine.newModel(verts, texture, coords, color, format)
         end
     end
 
+    -- set a texture to this Model
     m.setTexture = function (self, tex)
         self.mesh:setTexture(tex)
     end
 
+    -- check if this Model must be destroyed
+    -- (called by the parent Scene model's update function automatically)
     m.deathQuery = function (self)
         return not self.dead
     end
@@ -150,11 +114,12 @@ function engine.newModel(verts, texture, coords, color, format)
     return m
 end
 
-
+-- create a new Scene object with given canvas output size
 function engine.newScene(renderWidth,renderHeight)
 	love.graphics.setDepthMode("lequal", true)
     local scene = {}
 
+    -- define the shaders used in rendering the scene
     local vertexShader = [[
         uniform mat4 view;
         uniform mat4 model_matrix;
@@ -178,9 +143,7 @@ function engine.newScene(renderWidth,renderHeight)
             return view * model_matrix * vertex_position;
         }
     ]]
-
     local fragmentShader = [[
-
         uniform mat4 view;
         uniform mat4 model_matrix;
         uniform mat4 model_matrix_inverse;
@@ -203,23 +166,25 @@ function engine.newScene(renderWidth,renderHeight)
             return texturecolor;
         }
     ]]
-
     scene.threeShader = love.graphics.newShader(vertexShader, fragmentShader)
+
+    scene.renderWidth = renderWidth
+    scene.renderHeight = renderHeight
+
+    -- create a canvas that will store the rendered 3d scene
+    scene.threeCanvas = love.graphics.newCanvas(renderWidth, renderHeight)
+    -- create a canvas that will store a 2d layer that can be drawn on top of the 3d scene
+    scene.twoCanvas = love.graphics.newCanvas(renderWidth, renderHeight)
+    scene.modelList = {}
 
     scene.camera = {
         pos = cpml.vec3(0, 0, 0),
         angle = cpml.vec3(0, 0, 0),
-        perspective = TransposeMatrix(cpml.mat4.from_perspective(60, love.graphics.getWidth()/love.graphics.getHeight(), 0.1, 10000)),
+        perspective = TransposeMatrix(cpml.mat4.from_perspective(60, renderWidth/renderHeight, 0.1, 10000)),
         transform = cpml.mat4(),
     }
 
-    scene.modelList = {}
-
-    scene.renderWidth = renderWidth
-    scene.renderHeight = renderHeight
-    scene.threeCanvas = love.graphics.newCanvas(renderWidth, renderHeight)
-    scene.twoCanvas = love.graphics.newCanvas(renderWidth, renderHeight)
-
+    -- should be called in love.update every frame
     scene.update = function (self)
         local i = 1
         while i<=#(self.modelList) do
@@ -232,6 +197,7 @@ function engine.newScene(renderWidth,renderHeight)
         end
     end
 
+    -- call in love.update for a simple first person camera movement system
     scene.basicCamera = function (self, dt)
         local speed = 5 * dt
         if love.keyboard.isDown("lctrl") then
@@ -252,6 +218,8 @@ function engine.newScene(renderWidth,renderHeight)
         pos.y = pos.y + mul * speed
     end
 
+    -- renders the models in the scene to the threeCanvas
+    -- will not draw threeCanvas if drawArg is not given or is false (use if you want to scale the game canvas to window)
     scene.render = function (self, drawArg)
         love.graphics.setColor(1,1,1)
         love.graphics.setCanvas({self.threeCanvas, depth=true})
@@ -291,6 +259,9 @@ function engine.newScene(renderWidth,renderHeight)
         end
     end
 
+    -- renders the given func to the twoCanvas
+    -- this is useful for drawing 2d HUDS and information on the screen in front of the 3d scene
+    -- will not draw threeCanvas if drawArg is not given or is false (use if you want to scale the game canvas to window)
     scene.renderFunction = function (self, func, drawArg)
         love.graphics.setColor(1,1,1)
         love.graphics.setCanvas(Scene.twoCanvas)
@@ -303,6 +274,9 @@ function engine.newScene(renderWidth,renderHeight)
         end
     end
 
+    -- useful if mouse relativeMode is enabled
+    -- useful to call from love.mousemoved
+    -- a simple first person mouse look function
     scene.mouseLook = function (self, x, y, dx, dy)
         local Camera = self.camera
         Camera.angle.x = Camera.angle.x + math.rad(dx * 0.5)
@@ -312,6 +286,7 @@ function engine.newScene(renderWidth,renderHeight)
     return scene
 end
 
+-- useful functions
 function TransposeMatrix(mat)
 	local m = cpml.mat4.new()
 	return cpml.mat4.transpose(m, mat)
@@ -320,7 +295,6 @@ function InvertMatrix(mat)
 	local m = cpml.mat4.new()
 	return cpml.mat4.invert(m, mat)
 end
-
 function CopyTable(orig)
     local orig_type = type(orig)
     local copy
@@ -335,13 +309,11 @@ function CopyTable(orig)
     end
     return copy
 end
-
 function GetSign(n)
     if n > 0 then return 1 end
     if n < 0 then return -1 end
     return 0
 end
-
 function CrossProduct(v1,v2)
     local a = {x = v1[1], y = v1[2], z = v1[3]}
     local b = {x = v2[1], y = v2[2], z = v2[3]}
@@ -352,7 +324,6 @@ function CrossProduct(v1,v2)
     z = a.x * b.y - a.y * b.x
     return { x, y, z } 
 end
-
 function UnitVectorOf(vector)
     local ab1 = math.abs(vector[1])
     local ab2 = math.abs(vector[2])
@@ -363,10 +334,39 @@ function UnitVectorOf(vector)
     local ret = {vector[1]/max, vector[2]/max, vector[3]/max}
     return ret
 end
-
 function VectorLength(x2,y2,z2) 
     local x1,y1,z1 = 0,0,0
     return ((x2-x1)^2+(y2-y1)^2+(z2-z1)^2)^0.5 
+end
+function ScaleVerts(verts, sx,sy,sz)
+    if sy == nil then
+        sy = sx
+        sz = sx
+    end
+
+    for i=1, #verts do
+        local this = verts[i]
+        this[1] = this[1]*sx
+        this[2] = this[2]*sy
+        this[3] = this[3]*sz
+    end
+
+    return verts
+end
+function MoveVerts(verts, sx,sy,sz)
+    if sy == nil then
+        sy = sx
+        sz = sx
+    end
+
+    for i=1, #verts do
+        local this = verts[i]
+        this[1] = this[1]+sx
+        this[2] = this[2]+sy
+        this[3] = this[3]+sz
+    end
+
+    return verts
 end
 
 return engine

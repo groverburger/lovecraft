@@ -228,7 +228,7 @@ function NewChunkSlice(x,y,z, parent)
             model[#model+1] = {0, 1, 0}
             visible = false
         end
-        local compmodel = Engine.newModel(Engine.luaModelLoader(model), LightingTexture, {0,0,0})
+        local compmodel = Engine.newModel(model, LightingTexture, {0,0,0})
         compmodel.visible = visible
         self:assignModel(compmodel)
     end
