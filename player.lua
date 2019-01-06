@@ -153,7 +153,7 @@ function NewVoxelCursor(x,y,z)
     model[#model+1] = {x+scale, y+scale, z+scale}
     model[#model+1] = {x+scale, y, z+scale}
 
-    local compmodel = Engine.newModel(Engine.luaModelLoader(model), nil, {0,0,0}, {0,0,0})
+    local compmodel = Engine.newModel(model, nil, {0,0,0}, {0,0,0})
     compmodel.wireframe = true
     t:assignModel(compmodel)
 

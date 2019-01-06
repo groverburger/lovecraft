@@ -19,15 +19,14 @@ function love.load()
     LightingTexture = love.graphics.newCanvas(width*LightValues, height)
     local mult = 1
     love.graphics.setCanvas(LightingTexture)
+    love.graphics.clear(0,0,0,1)
     for i=LightValues, 1, -1 do
         local xx = (i-1)*width
-        love.graphics.setColor(1,1,1)
+        love.graphics.setColor(1,1,1, mult)
         love.graphics.draw(TileTexture, xx,0)
-        love.graphics.setColor(0,0,0, mult)
-        love.graphics.rectangle("fill", xx,0, xx+width, height)
-        love.graphics.setColor(1,1,1)
         mult = mult * 0.8
     end
+    love.graphics.setColor(1,1,1)
     love.graphics.setCanvas()
 
     ChunkSize = 16
@@ -48,6 +47,12 @@ function love.load()
         ChunkList[ChunkHash(i)] = {}
         for j=viewSize/-2 +1, viewSize/2 do
             ChunkList[ChunkHash(i)][ChunkHash(j)] = CreateThing(NewChunk(i,j))
+        end
+    end
+    for i=viewSize/-2 +1, viewSize/2 do
+        print(i)
+        for j=viewSize/-2 +1, viewSize/2 do
+            ChunkList[ChunkHash(i)][ChunkHash(j)]:initialize()
         end
     end
     ThePlayer = CreateThing(NewPlayer(0,90,0))
@@ -259,7 +264,8 @@ function love.mousepressed(x,y, b)
     and ThePlayer.cursorpos.chunk ~= nil 
     and ThePlayer.cursorpos.chunk:getVoxel(ThePlayer.cursorpos.x,ThePlayer.cursorpos.y,ThePlayer.cursorpos.z) ~= 0 then
         chunk:setVoxel(cx,cy,cz, value)
-        chunk:updateSlice(cy)
+        chunk:updateModel(cx,cy,cz)
+        print(cx,cy,cz)
     end
 end
 
