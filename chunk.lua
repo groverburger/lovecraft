@@ -118,22 +118,22 @@ function NewChunk(x,z)
         if not mustStop then
             local chunkGet = GetChunk(xx-1,y,zz)
             if chunkGet ~= self and chunkGet ~= nil then
-                print("double double negX")
+                --print("negX")
                 chunkGet:updateModel(ChunkSize,y,z, true)
             end
             local chunkGet = GetChunk(xx+1,y,zz)
             if chunkGet ~= self and chunkGet ~= nil then
-                print("double double posX")
+                --print("posX")
                 chunkGet:updateModel(1,y,z, true)
             end
             local chunkGet = GetChunk(xx,y,zz-1)
             if chunkGet ~= self and chunkGet ~= nil then
-                print("double double negZ")
+                --print("negZ")
                 chunkGet:updateModel(x,y,ChunkSize, true)
             end
             local chunkGet = GetChunk(xx,y,zz+1)
             if chunkGet ~= self and chunkGet ~= nil then
-                print("double double posZ")
+                --print("posZ")
                 chunkGet:updateModel(x,y,1, true)
             end
         end

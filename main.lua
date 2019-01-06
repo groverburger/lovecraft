@@ -184,6 +184,9 @@ function TileEnums(n)
         {texture = {1}, isVisible = true, isSolid = true}, -- stone
         {texture = {3,0,2}, isVisible = true, isSolid = true}, -- grass
         {texture = {2}, isVisible = true, isSolid = true}, -- dirt
+        {texture = {4}, isVisible = true, isSolid = true}, -- planks
+        {texture = {7}, isVisible = true, isSolid = true}, -- bricks
+        {texture = {16}, isVisible = true, isSolid = true}, -- cobble
     }
 
     return list[n+1]
@@ -225,12 +228,12 @@ function love.draw()
     Scene:renderFunction(
         function ()
             love.graphics.setColor(0,0,0)
-            love.graphics.print(ThePlayer.x.."\n"..ThePlayer.y.."\n"..ThePlayer.z)
+            love.graphics.print("x: "..math.floor(ThePlayer.x+0.5).."\ny: "..math.floor(ThePlayer.y+0.5).."\nz: "..math.floor(ThePlayer.z+0.5))
             local chunk, cx,cy,cz, hashx,hashy = GetChunk(ThePlayer.x,ThePlayer.y,ThePlayer.z)
             if chunk ~= nil then
-                love.graphics.print(collectgarbage('count'),0,50)
-                love.graphics.print(#chunk.voxels[1][1], 0,70)
+                love.graphics.print("kB: "..math.floor(collectgarbage('count')),0,50)
             end
+            love.graphics.print("FPS: "..love.timer.getFPS(), 0, 70)
         end, true
     )
 
@@ -255,7 +258,7 @@ function love.mousepressed(x,y, b)
 
     if b == 2 then
         pos = ThePlayer.cursorposPrev
-        value = 1
+        value = 6
     end
 
     local cx,cy,cz = pos.x, pos.y, pos.z
