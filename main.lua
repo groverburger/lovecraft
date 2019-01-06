@@ -265,7 +265,9 @@ function love.mousepressed(x,y, b)
     and ThePlayer.cursorpos.chunk:getVoxel(ThePlayer.cursorpos.x,ThePlayer.cursorpos.y,ThePlayer.cursorpos.z) ~= 0 then
         chunk:setVoxel(cx,cy,cz, value)
         chunk:updateModel(cx,cy,cz)
+        print("---")
         print(cx,cy,cz)
+        print(cx%ChunkSize,cy%SliceHeight,cz%ChunkSize)
     end
 end
 

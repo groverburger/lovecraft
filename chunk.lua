@@ -97,14 +97,45 @@ function NewChunk(x,z)
         end
     end
 
-    chunk.updateModel = function (self, x,y,z)
-        local sx = (x-1)%ChunkSize
-        local sy = (y-1)%SliceHeight
-        local sz = (z-1)%ChunkSize
+    chunk.updateModel = function (self, x,y,z, mustStop)
+        if mustStop == nil then
+            mustStop = false
+        end
+        local sy = (y)%SliceHeight
+        local xx,zz = (self.x-1)*ChunkSize + x-1, (self.z-1)*ChunkSize + z-1
         local i = math.floor((y-1)/SliceHeight) +1
 
         if self.slices[i] ~= nil then
             self.slices[i]:updateModel()
+        end
+        if true and self.slices[i+1] ~= nil then
+            self.slices[i+1]:updateModel()
+        end
+        if (true or sy == 1) and self.slices[i-1] ~= nil then
+            self.slices[i-1]:updateModel()
+        end
+
+        if not mustStop then
+            local chunkGet = GetChunk(xx-1,y,zz)
+            if chunkGet ~= self and chunkGet ~= nil then
+                print("double double negX")
+                chunkGet:updateModel(ChunkSize,y,z, true)
+            end
+            local chunkGet = GetChunk(xx+1,y,zz)
+            if chunkGet ~= self and chunkGet ~= nil then
+                print("double double posX")
+                chunkGet:updateModel(1,y,z, true)
+            end
+            local chunkGet = GetChunk(xx,y,zz-1)
+            if chunkGet ~= self and chunkGet ~= nil then
+                print("double double negZ")
+                chunkGet:updateModel(x,y,ChunkSize, true)
+            end
+            local chunkGet = GetChunk(xx,y,zz+1)
+            if chunkGet ~= self and chunkGet ~= nil then
+                print("double double posZ")
+                chunkGet:updateModel(x,y,1, true)
+            end
         end
     end
 
