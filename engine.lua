@@ -120,53 +120,23 @@ function engine.newScene(renderWidth,renderHeight)
     local scene = {}
 
     -- define the shaders used in rendering the scene
-    local vertexShader = [[
+    scene.threeShader = love.graphics.newShader[[
         uniform mat4 view;
         uniform mat4 model_matrix;
-        uniform mat4 model_matrix_inverse;
 
-        varying mat4 modelView;
-        varying mat4 modelViewProjection;
-        varying vec3 normal;
-        varying vec3 vposition;
-        
-        attribute vec4 VertexNormal;
-
-        vec4 position(mat4 transform_projection, vec4 vertex_position) 
-        {
-            modelView = view * model_matrix;
-            modelViewProjection = view * model_matrix * transform_projection;
-            
-            normal = vec3(model_matrix_inverse * vec4(VertexNormal));
-            vposition = vec3(model_matrix * vertex_position);
-
+        #ifdef VERTEX
+        vec4 position(mat4 transform_projection, vec4 vertex_position) {
             return view * model_matrix * vertex_position;
         }
-    ]]
-    local fragmentShader = [[
-        uniform mat4 view;
-        uniform mat4 model_matrix;
-        uniform mat4 model_matrix_inverse;
+        #endif
 
-        varying mat4 modelView;
-        varying mat4 modelViewProjection;
-        varying vec3 normal;
-        varying vec3 vposition;
-
-        vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) 
-        {
+        #ifdef PIXEL
+        vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
             vec4 texturecolor = Texel(texture, texture_coords);
-
-            //if the alpha here is close to zero just don't draw anything here
-            if (texturecolor.a == 0.0)
-            {
-                discard;
-            }
-
-            return texturecolor;
+            return color*texturecolor;
         }
+        #endif
     ]]
-    scene.threeShader = love.graphics.newShader(vertexShader, fragmentShader)
 
     scene.renderWidth = renderWidth
     scene.renderHeight = renderHeight
@@ -243,7 +213,7 @@ function engine.newScene(renderWidth,renderHeight)
             if model ~= nil and model.visible then
                 self.threeShader:send("model_matrix", model.transform)
                 -- need the inverse to compute normals when model is rotated
-                self.threeShader:send("model_matrix_inverse", TransposeMatrix(InvertMatrix(model.transform)))
+                --self.threeShader:send("model_matrix_inverse", TransposeMatrix(InvertMatrix(model.transform)))
                 love.graphics.setWireframe(model.wireframe)
                 love.graphics.draw(model.mesh, -self.renderWidth/2, -self.renderHeight/2)
                 love.graphics.setWireframe(false)
