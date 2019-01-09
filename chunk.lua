@@ -212,12 +212,12 @@ function NewChunkSlice(x,y,z, parent)
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
 
-                            model[#model+1] = {x, y, z, tx,ty2}
-                            model[#model+1] = {x, y+scale, z, tx,ty}
-                            model[#model+1] = {x, y, z+scale, tx2,ty2}
-                            model[#model+1] = {x, y+scale, z+scale, tx2,ty}
-                            model[#model+1] = {x, y+scale, z, tx,ty}
-                            model[#model+1] = {x, y, z+scale, tx2,ty2}
+                            model[#model+1] = {x, y, z, tx2,ty2}
+                            model[#model+1] = {x, y+scale, z, tx2,ty}
+                            model[#model+1] = {x, y, z+scale, tx,ty2}
+                            model[#model+1] = {x, y+scale, z+scale, tx,ty}
+                            model[#model+1] = {x, y+scale, z, tx2,ty}
+                            model[#model+1] = {x, y, z+scale, tx,ty2}
                         end
 
                         -- negative x
@@ -281,12 +281,12 @@ function NewChunkSlice(x,y,z, parent)
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
 
-                            model[#model+1] = {x, y, z+scale, tx,ty2}
-                            model[#model+1] = {x, y+scale, z+scale, tx,ty}
-                            model[#model+1] = {x+scale, y, z+scale, tx2,ty2}
-                            model[#model+1] = {x+scale, y+scale, z+scale, tx2,ty}
-                            model[#model+1] = {x, y+scale, z+scale, tx,ty}
-                            model[#model+1] = {x+scale, y, z+scale, tx2,ty2}
+                            model[#model+1] = {x, y, z+scale, tx2,ty2}
+                            model[#model+1] = {x, y+scale, z+scale, tx2,ty}
+                            model[#model+1] = {x+scale, y, z+scale, tx,ty2}
+                            model[#model+1] = {x+scale, y+scale, z+scale, tx,ty}
+                            model[#model+1] = {x, y+scale, z+scale, tx2,ty}
+                            model[#model+1] = {x+scale, y, z+scale, tx,ty2}
                         end
                     end
                 end

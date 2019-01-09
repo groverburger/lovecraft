@@ -189,7 +189,7 @@ function engine.newScene(renderWidth,renderHeight)
     end
 
     -- renders the models in the scene to the threeCanvas
-    -- will not draw threeCanvas if drawArg is not given or is false (use if you want to scale the game canvas to window)
+    -- will draw threeCanvas if drawArg is not given or is true (use if you want to scale the game canvas to window)
     scene.render = function (self, drawArg)
         love.graphics.setColor(1,1,1)
         love.graphics.setCanvas({self.threeCanvas, depth=true})
@@ -231,7 +231,7 @@ function engine.newScene(renderWidth,renderHeight)
 
     -- renders the given func to the twoCanvas
     -- this is useful for drawing 2d HUDS and information on the screen in front of the 3d scene
-    -- will not draw threeCanvas if drawArg is not given or is false (use if you want to scale the game canvas to window)
+    -- will draw threeCanvas if drawArg is not given or is true (use if you want to scale the game canvas to window)
     scene.renderFunction = function (self, func, drawArg)
         love.graphics.setColor(1,1,1)
         love.graphics.setCanvas(Scene.twoCanvas)

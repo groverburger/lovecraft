@@ -4,9 +4,11 @@ require "chunk"
 
 function love.load()
     GraphicsWidth, GraphicsHeight = 520*2, (520*9/16)*2
+    InterfaceWidth, InterfaceHeight = GraphicsWidth/2, GraphicsHeight/2
     love.graphics.setBackgroundColor(0,0.7,0.95)
     love.mouse.setRelativeMode(true)
     love.graphics.setDefaultFilter("nearest", "nearest")
+    love.graphics.setLineStyle("rough")
     love.window.setMode(GraphicsWidth,GraphicsHeight, {vsync=true})
     Scene = Engine.newScene(GraphicsWidth, GraphicsHeight)
     Scene.camera.perspective = TransposeMatrix(cpml.mat4.from_perspective(90, love.graphics.getWidth()/love.graphics.getHeight(), 0.1, 10000))
@@ -234,13 +236,18 @@ function love.draw()
                 love.graphics.print("kB: "..math.floor(collectgarbage('count')),0,50)
             end
             love.graphics.print("FPS: "..love.timer.getFPS(), 0, 70)
-        end, true
+
+            love.graphics.setColor(1,1,1)
+            local crosshairSize = 6
+            love.graphics.line(InterfaceWidth/2,InterfaceHeight/2 -crosshairSize+1, InterfaceWidth/2,InterfaceHeight/2 +crosshairSize)
+            love.graphics.line(InterfaceWidth/2 -crosshairSize,InterfaceHeight/2, InterfaceWidth/2 +crosshairSize-1,InterfaceHeight/2)
+        end, false
     )
 
-    --love.graphics.setColor(1,1,1)
-    --local scale = love.graphics.getWidth()/GraphicsWidth
+    love.graphics.setColor(1,1,1)
+    local scale = love.graphics.getWidth()/InterfaceWidth
     --love.graphics.draw(Scene.threeCanvas, love.graphics.getWidth()/2,love.graphics.getHeight()/2, 0, scale,-1*scale, GraphicsWidth/2, GraphicsHeight/2)
-    --love.graphics.draw(Scene.twoCanvas, love.graphics.getWidth()/2,love.graphics.getHeight()/2 +1, 0, scale,scale, GraphicsWidth/2, GraphicsHeight/2)
+    love.graphics.draw(Scene.twoCanvas, love.graphics.getWidth()/2,love.graphics.getHeight()/2 +1, 0, scale,scale, InterfaceWidth/2, InterfaceHeight/2)
 end
 
 function love.mousemoved(x,y, dx,dy)
@@ -263,14 +270,12 @@ function love.mousepressed(x,y, b)
 
     local cx,cy,cz = pos.x, pos.y, pos.z
     local chunk = pos.chunk
-    if chunk ~= nil 
-    and ThePlayer.cursorpos.chunk ~= nil 
-    and ThePlayer.cursorpos.chunk:getVoxel(ThePlayer.cursorpos.x,ThePlayer.cursorpos.y,ThePlayer.cursorpos.z) ~= 0 then
+    if chunk ~= nil and ThePlayer.cursorpos.chunk ~= nil and ThePlayer.cursorHit then
         chunk:setVoxel(cx,cy,cz, value)
         chunk:updateModel(cx,cy,cz)
-        print("---")
-        print(cx,cy,cz)
-        print(cx%ChunkSize,cy%SliceHeight,cz%ChunkSize)
+        --print("---")
+        --print(cx,cy,cz)
+        --print(cx%ChunkSize,cy%SliceHeight,cz%ChunkSize)
     end
 end
 
