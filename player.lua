@@ -15,9 +15,13 @@ function NewPlayer(x,y,z)
 
     t.update = function (self, dt)
         local Camera = Scene.camera
+
+        -- apply gravity and friction
         self.xSpeed = self.xSpeed * self.friction
         self.zSpeed = self.zSpeed * self.friction
         self.ySpeed = self.ySpeed - 0.009
+
+        -- determine if player has hit ground this frame
         self.onGround = false
         if TileEnums(GetVoxel(self.x+self.width,self.y+self.ySpeed,self.z+self.width)).isSolid
         or TileEnums(GetVoxel(self.x+self.width,self.y+self.ySpeed,self.z-self.width)).isSolid
@@ -38,6 +42,7 @@ function NewPlayer(x,y,z)
         local mx,my = 0,0
         local moving = false
 
+        -- take player input 
         if love.keyboard.isDown("w") then
             mx = mx + 0
             my = my - 1
@@ -63,9 +68,12 @@ function NewPlayer(x,y,z)
             moving = true
         end
 
+        -- jump if on ground
         if love.keyboard.isDown("space") and self.onGround then
             self.ySpeed = self.ySpeed + 0.15
         end
+
+        -- hit head ceilings
         if math.abs(self.ySpeed) == self.ySpeed
         and (TileEnums(GetVoxel(self.x-self.width,self.y+self.height+self.ySpeed,self.z+self.width)).isSolid
         or TileEnums(GetVoxel(self.x-self.width,self.y+self.height+self.ySpeed,self.z-self.width)).isSolid
@@ -74,6 +82,7 @@ function NewPlayer(x,y,z)
             self.ySpeed = -0.5*self.ySpeed
         end
 
+        -- convert WASD keys pressed into an angle, move xSpeed and zSpeed according to cos and sin
         if moving then
             local angle = math.angle(0,0, mx,my)
             self.direction = (Camera.angle.x + angle)*-1 +math.pi/2
@@ -81,33 +90,42 @@ function NewPlayer(x,y,z)
             self.zSpeed = self.zSpeed + math.sin(Camera.angle.x + angle) * self.moveSpeed
         end
 
+        -- y values are good, cement them
         self.y = self.y + self.ySpeed
 
+        -- check for collisions with walls along the x direction
         if not TileEnums(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y,self.z -self.width)).isSolid
         and not TileEnums(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y+1,self.z -self.width)).isSolid 
         and not TileEnums(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y,self.z +self.width)).isSolid
         and not TileEnums(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y+1,self.z +self.width)).isSolid then
+            -- x values are good, cement them
             self.x = self.x + self.xSpeed
         else
             self.xSpeed = 0
         end
+
+        -- check for collisions with walls along the z direction
         if not TileEnums(GetVoxel(self.x -self.width,self.y,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width)).isSolid
         and not TileEnums(GetVoxel(self.x -self.width,self.y+1,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width)).isSolid 
         and not TileEnums(GetVoxel(self.x +self.width,self.y,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width)).isSolid
         and not TileEnums(GetVoxel(self.x +self.width,self.y+1,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width)).isSolid then
+            -- z values are good, cement them
             self.z = self.z + self.zSpeed
         else
             self.zSpeed = 0
         end
 
+        -- view bobbing
         local speed = math.dist(0,0, self.xSpeed,self.zSpeed)
         self.viewBob = self.viewBob + speed*2.75
         self.viewBobMult = math.min(speed, 1)
 
+        -- update camera position to new player position
         Scene.camera.pos.x = self.x
         Scene.camera.pos.y = self.y + math.sin(self.viewBob)*self.viewBobMult*1 +self.eyeLevel
         Scene.camera.pos.z = self.z
 
+        -- update voxel cursor position to whatever block currently pointing at 
         local rx,ry,rz = Scene.camera.pos.x,Scene.camera.pos.y,Scene.camera.pos.z
         local step = 0.1
         self.voxelCursor.model.visible = false
@@ -134,6 +152,7 @@ function NewPlayer(x,y,z)
     return t
 end
 
+-- the model for the wireframe outline of the block currently selected by ThePlayer in the world
 function NewVoxelCursor(x,y,z)
     local t = NewThing(x,y,z)
     local model = {}

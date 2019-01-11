@@ -2,6 +2,7 @@ function ReplaceChar(str, pos, r)
     return str:sub(1, pos-1) .. r .. str:sub(pos+#r)
 end
 
+-- noise function used in chunk generation
 function ChunkNoise(x,y,z)
     local freq = 16
     local yfreq = 12
@@ -18,11 +19,16 @@ function NewChunk(x,z)
     local grass = true
     local floor = 48
     local ceiling = 120
+
+    -- iterate through chunk 
+    -- voxel data is stored in strings in a 2d array to simulate a 3d array of bytes
     for i=1, ChunkSize do
         chunk.voxels[i] = {}
         for k=1, ChunkSize do
             local temp = {}
 
+            -- for every x and z value start at top of world going down
+            -- when hit first solid block is grass, next four are dirt
             local sunlight = true
             for j=WorldHeight, 1,-1 do
                 local xx = (x-1)*ChunkSize + i
@@ -64,6 +70,7 @@ function NewChunk(x,z)
         end
     end
 
+    -- get voxel id of the voxel in this chunk's coordinate space
     chunk.getVoxel = function (self, x,y,z)
         x = math.floor(x)
         y = math.floor(y)
@@ -77,6 +84,7 @@ function NewChunk(x,z)
         return 0, 0
     end
 
+    -- set voxel id of the voxel in this chunk's coordinate space
     chunk.setVoxel = function (self, x,y,z, value)
         x = math.floor(x)
         y = math.floor(y)
@@ -97,6 +105,9 @@ function NewChunk(x,z)
         end
     end
 
+    -- update this chunk's model after voxels in it have been modified
+    -- update only relevant chunkslices to x,y,z value given
+    -- mustStop is given as a way to prevent infinite recursion
     chunk.updateModel = function (self, x,y,z, mustStop)
         if mustStop == nil then
             mustStop = false
@@ -108,6 +119,8 @@ function NewChunk(x,z)
         if self.slices[i] ~= nil then
             self.slices[i]:updateModel()
         end
+
+        -- update vertical neighbors if relevant
         if true and self.slices[i+1] ~= nil then
             self.slices[i+1]:updateModel()
         end
@@ -115,6 +128,7 @@ function NewChunk(x,z)
             self.slices[i-1]:updateModel()
         end
 
+        -- update lateral chunk neighbors if relevant
         if not mustStop then
             local chunkGet = GetChunk(xx-1,y,zz)
             if chunkGet ~= self and chunkGet ~= nil then
@@ -155,6 +169,9 @@ function NewChunkSlice(x,y,z, parent)
     t.updateModel = function (self)
         local model = {}
 
+        -- iterate through the voxels in this chunkslice's domain
+        -- if air block, see if any solid neighbors
+        -- then place faces down accordingly with proper texture and lighting value
         for i=1, ChunkSize do
             for j=math.max(self.y, 1), self.y+SliceHeight do
                 for k=1, ChunkSize do
