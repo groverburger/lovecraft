@@ -17,7 +17,7 @@ function NewPlayer(x,y,z)
         local Camera = Scene.camera
         self.xSpeed = self.xSpeed * self.friction
         self.zSpeed = self.zSpeed * self.friction
-        self.ySpeed = self.ySpeed - 0.01
+        self.ySpeed = self.ySpeed - 0.009
         self.onGround = false
         if TileEnums(GetVoxel(self.x+self.width,self.y+self.ySpeed,self.z+self.width)).isSolid
         or TileEnums(GetVoxel(self.x+self.width,self.y+self.ySpeed,self.z-self.width)).isSolid
@@ -64,7 +64,7 @@ function NewPlayer(x,y,z)
         end
 
         if love.keyboard.isDown("space") and self.onGround then
-            self.ySpeed = self.ySpeed + 0.165
+            self.ySpeed = self.ySpeed + 0.15
         end
         if math.abs(self.ySpeed) == self.ySpeed
         and (TileEnums(GetVoxel(self.x-self.width,self.y+self.height+self.ySpeed,self.z+self.width)).isSolid

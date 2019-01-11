@@ -14,8 +14,8 @@ function love.load()
     Scene.camera.perspective = TransposeMatrix(cpml.mat4.from_perspective(90, love.graphics.getWidth()/love.graphics.getHeight(), 0.1, 10000))
 
     LightValues = 16
-    DefaultTexture = love.graphics.newImage("texture.png")
-    TileTexture = love.graphics.newImage("terrain.png")
+    DefaultTexture = love.graphics.newImage("assets/texture.png")
+    TileTexture = love.graphics.newImage("assets/terrain.png")
 
     local width, height = TileTexture:getWidth(), TileTexture:getHeight()
     LightingTexture = love.graphics.newCanvas(width*LightValues, height)
@@ -57,7 +57,7 @@ function love.load()
             ChunkList[ChunkHash(i)][ChunkHash(j)]:initialize()
         end
     end
-    ThePlayer = CreateThing(NewPlayer(0,90,0))
+    ThePlayer = CreateThing(NewPlayer(0,128,0))
 end
 
 function ChunkHash(x)

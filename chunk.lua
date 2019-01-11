@@ -28,7 +28,7 @@ function NewChunk(x,z)
                 local xx = (x-1)*ChunkSize + i
                 local zz = (z-1)*ChunkSize + k
                 local yy = (j-1)*2 +1
-                
+
                 temp[yy+1] = string.char(12)
                 if sunlight then
                     temp[yy+1] = string.char(15)

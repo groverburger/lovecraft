@@ -4,7 +4,7 @@
 cpml = require "cpml"
 
 local engine = {}
-engine.objModelLoader = require "modelLoader"
+engine.objModelLoader = require "modelloader"
 engine.objFormat = { 
     {"VertexPosition", "float", 4}, 
     {"VertexTexCoord", "float", 2}, 
