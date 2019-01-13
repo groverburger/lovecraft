@@ -1,4 +1,5 @@
 Engine = require "engine"
+Perspective = require "perspective"
 require "things"
 require "player"
 require "chunk"
@@ -6,12 +7,13 @@ require "chunk"
 function love.load()
     -- window graphics settings
     GraphicsWidth, GraphicsHeight = 520*2, (520*9/16)*2
-    InterfaceWidth, InterfaceHeight = GraphicsWidth/2, GraphicsHeight/2
+    InterfaceWidth, InterfaceHeight = GraphicsWidth, GraphicsHeight
     love.graphics.setBackgroundColor(0,0.7,0.95)
     love.mouse.setRelativeMode(true)
     love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setLineStyle("rough")
     love.window.setMode(GraphicsWidth,GraphicsHeight, {vsync=true})
+    love.window.setTitle("lövecraft")
 
     -- create scene object from SS3D engine
     Scene = Engine.newScene(GraphicsWidth, GraphicsHeight)
@@ -20,6 +22,24 @@ function love.load()
     -- load assets
     DefaultTexture = love.graphics.newImage("assets/texture.png")
     TileTexture = love.graphics.newImage("assets/terrain.png")
+    GuiSprites = love.graphics.newImage("assets/gui.png")
+    GuiHotbarQuad = love.graphics.newQuad(0,0, 182,22, GuiSprites:getDimensions())
+    GuiHotbarSelectQuad = love.graphics.newQuad(0,22, 24,22+24, GuiSprites:getDimensions())
+    GuiCrosshair = love.graphics.newQuad(256-16,0, 256,16, GuiSprites:getDimensions())
+
+    -- make a separate canvas image for each of the tiles in the TileTexture
+    TileCanvas = {}
+    for i=1, 16 do
+        for j=1, 16 do
+            local xx,yy = (i-1)*16,(j-1)*16
+            local index = (j-1)*16 + i
+            TileCanvas[index] = love.graphics.newCanvas(16,16)
+            local this = TileCanvas[index]
+            love.graphics.setCanvas(this)
+            love.graphics.draw(TileTexture, -1*xx,-1*yy)
+        end
+    end
+    love.graphics.setCanvas()
 
     -- create lighting value textures on LightingTexture canvas
     LightValues = 16
@@ -51,8 +71,17 @@ function love.load()
 
     -- initializing the update queue that holds all entities
     ThingList = {}
+    ThePlayer = CreateThing(NewPlayer(0,128,0))
+    PlayerInventory = {items = {}, hotbarSelect=1}
 
-    -- generate the world
+    for i=1, 36 do
+        PlayerInventory.items[i] = 0
+    end
+    for i=1, 9 do
+        PlayerInventory.items[i] = i
+    end
+
+    -- generate the world, store in 2d hash table
     ChunkList = {}
     local worldSize = 4
     for i=worldSize/-2 +1, worldSize/2 do
@@ -68,7 +97,6 @@ function love.load()
             ChunkList[ChunkHash(i)][ChunkHash(j)]:initialize()
         end
     end
-    ThePlayer = CreateThing(NewPlayer(0,128,0))
 end
 
 -- convert an index into a point on a 2d plane of given width and height
@@ -119,13 +147,16 @@ function TileEnums(n)
     local list = {
         -- textures are in format: SIDE UP DOWN FRONT
         -- at least one texture must be present
-        {texture = {0}, isVisible = false, isSolid = false}, -- air
-        {texture = {1}, isVisible = true, isSolid = true}, -- stone
-        {texture = {3,0,2}, isVisible = true, isSolid = true}, -- grass
-        {texture = {2}, isVisible = true, isSolid = true}, -- dirt
-        {texture = {4}, isVisible = true, isSolid = true}, -- planks
-        {texture = {7}, isVisible = true, isSolid = true}, -- bricks
-        {texture = {16}, isVisible = true, isSolid = true}, -- cobble
+        {texture = {0}, isVisible = false, isSolid = false}, -- 0 air
+        {texture = {1}, isVisible = true, isSolid = true}, -- 1 stone
+        {texture = {3,0,2}, isVisible = true, isSolid = true}, -- 2 grass
+        {texture = {2}, isVisible = true, isSolid = true}, -- 3 dirt
+        {texture = {16}, isVisible = true, isSolid = true}, -- 4 cobble
+        {texture = {4}, isVisible = true, isSolid = true}, -- 5 planks
+        {texture = {15}, isVisible = true, isSolid = true}, -- 6 sapling
+        {texture = {17}, isVisible = true, isSolid = true}, -- 7 bedrock
+        {texture = {14}, isVisible = true, isSolid = true}, -- 8 water
+        {texture = {14}, isVisible = true, isSolid = true}, -- 9 stationary water
     }
 
     -- transforms the list into base 0 to accomodate for air blocks
@@ -150,6 +181,40 @@ function love.update(dt)
     end
 end
 
+function DrawHudTile(tile, x,y)
+    local textures = TileEnums(tile).texture
+    if tile == 0 or textures == nil then
+        return
+    end
+    local x,y = x+16+6,y+16+6
+    local size = 16
+    local xsize = math.sin(3.14159/3)*16
+    local ysize = math.cos(3.14159/3)*16
+    love.graphics.setColor(1,1,1)
+
+    local centerPoint = {x,y}
+
+    -- textures are in format: SIDE UP DOWN FRONT
+    -- top
+    Perspective.quad(TileCanvas[textures[math.min(#textures, 2)]+1], {x,y-size},{x +xsize,y-ysize},centerPoint,{x-xsize,y-ysize})
+
+    -- right side front
+    local shade1 = 0.6
+    love.graphics.setColor(shade1,shade1,shade1)
+    local index = 1
+    if #textures == 4 then
+        index = 4
+    end
+    Perspective.quad(TileCanvas[textures[index]+1], centerPoint,{x +xsize,y -ysize},{x+xsize,y+ysize},{x,y+size})
+
+    -- left side side
+    local shade2 = 0.75
+    love.graphics.setColor(shade2,shade2,shade2)
+    Perspective.flip = true
+    Perspective.quad(TileCanvas[textures[1]+1], centerPoint,{x -xsize,y -ysize},{x-xsize,y+ysize},{x,y+size})
+    Perspective.flip = false
+end
+
 function love.draw()
     -- draw 3d scene
     Scene:render(true)
@@ -165,10 +230,17 @@ function love.draw()
             end
             love.graphics.print("FPS: "..love.timer.getFPS(), 0, 70)
 
+            -- draw crosshair
             love.graphics.setColor(1,1,1)
-            local crosshairSize = 6
-            love.graphics.line(InterfaceWidth/2,InterfaceHeight/2 -crosshairSize+1, InterfaceWidth/2,InterfaceHeight/2 +crosshairSize)
-            love.graphics.line(InterfaceWidth/2 -crosshairSize,InterfaceHeight/2, InterfaceWidth/2 +crosshairSize-1,InterfaceHeight/2)
+            love.graphics.draw(GuiSprites, GuiCrosshair, InterfaceWidth/2 -16,InterfaceHeight/2 -16, 0, 2,2)
+
+            -- draw hotbar
+            love.graphics.draw(GuiSprites, GuiHotbarQuad, InterfaceWidth/2 - 182, InterfaceHeight-22*2, 0, 2,2)
+            love.graphics.draw(GuiSprites, GuiHotbarSelectQuad, InterfaceWidth/2 - 182 + 40*(PlayerInventory.hotbarSelect-1) -2, InterfaceHeight-24 -22, 0, 2,2)
+
+            for i=1, 9 do
+                DrawHudTile(PlayerInventory.items[i], InterfaceWidth/2 -182 +40*(i-1),InterfaceHeight-22*2)
+            end
         end, false
     )
 
@@ -180,6 +252,10 @@ end
 function love.mousemoved(x,y, dx,dy)
     -- forward mouselook to Scene object for first person camera control
     Scene:mouseLook(x,y, dx,dy)
+end
+
+function love.wheelmoved(x,y)
+    PlayerInventory.hotbarSelect = math.floor( ((PlayerInventory.hotbarSelect - y -1)%9 +1) +0.5)
 end
 
 function love.mousepressed(x,y, b)
@@ -195,7 +271,7 @@ function love.mousepressed(x,y, b)
 
     if b == 2 then
         pos = ThePlayer.cursorposPrev
-        value = 6
+        value = PlayerInventory.items[PlayerInventory.hotbarSelect]
     end
 
     local cx,cy,cz = pos.x, pos.y, pos.z
@@ -212,6 +288,33 @@ end
 function love.keypressed(k)
     if k == "escape" then
         love.event.push("quit")
+    end
+    if k == "1" then
+        PlayerInventory.hotbarSelect = 1
+    end
+    if k == "2" then
+        PlayerInventory.hotbarSelect = 2
+    end
+    if k == "3" then
+        PlayerInventory.hotbarSelect = 3
+    end
+    if k == "4" then
+        PlayerInventory.hotbarSelect = 4
+    end
+    if k == "5" then
+        PlayerInventory.hotbarSelect = 5
+    end
+    if k == "6" then
+        PlayerInventory.hotbarSelect = 6
+    end
+    if k == "7" then
+        PlayerInventory.hotbarSelect = 7
+    end
+    if k == "8" then
+        PlayerInventory.hotbarSelect = 8
+    end
+    if k == "9" then
+        PlayerInventory.hotbarSelect = 9
     end
 end
 

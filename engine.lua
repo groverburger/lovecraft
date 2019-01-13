@@ -133,6 +133,11 @@ function engine.newScene(renderWidth,renderHeight)
         #ifdef PIXEL
         vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
             vec4 texturecolor = Texel(texture, texture_coords);
+            //if the alpha here is close to zero just don't draw anything here
+            if (texturecolor.a == 0.0)
+            {
+                discard;
+            }
             return color*texturecolor;
         }
         #endif
