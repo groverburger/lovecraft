@@ -92,13 +92,13 @@ function love.load()
             ChunkList[ChunkHash(i)][ChunkHash(j)] = CreateThing(NewChunk(i,j))
         end
     end
-    for i=1, #ChunkRequests do
-        local request = ChunkRequests[i]
-        for j=1, #request.blocks do
-            local block = request.blocks[j]
-            print(request.chunkx,request.chunky, block.x,block.y,block.z, block.value)
-        end
-    end
+    --for i=1, #ChunkRequests do
+        --local request = ChunkRequests[i]
+        --for j=1, #request.blocks do
+            --local block = request.blocks[j]
+            --print(request.chunkx,request.chunky, block.x,block.y,block.z, block.value)
+        --end
+    --end
     for i=worldSize/-2 +1, worldSize/2 do
         for j=worldSize/-2 +1, worldSize/2 do
             ChunkList[ChunkHash(i)][ChunkHash(j)]:processRequests()

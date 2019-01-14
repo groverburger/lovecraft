@@ -23,6 +23,10 @@ function NewChunk(x,z)
     local genTree = function (x,y,z)
         local treeHeight = 4 + math.floor(love.math.random()*2 +0.5)
 
+        for tr = 1, treeHeight do
+            NewChunkRequest(chunk.x,chunk.z, x,y+tr,z, 17)
+        end
+
         local leafWidth = 2
         for lx = -leafWidth, leafWidth do
             for ly = -leafWidth, leafWidth do
@@ -54,10 +58,6 @@ function NewChunk(x,z)
                     NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight+1,z+ly, 18)
                 end
             end
-        end
-
-        for tr = 1, treeHeight do
-            NewChunkRequest(chunk.x,chunk.z, x,y+tr,z, 17)
         end
     end
 
@@ -97,7 +97,7 @@ function NewChunk(x,z)
                             end
                         else
                             grass = false
-                            if love.math.random() < love.math.noise(i/32,k/32)*0.02 then
+                            if love.math.random() < love.math.noise(i/32,k/32)*0.02 and sunlight then
                                 genTree(i,j,k)
                             end
                             temp[yy] = string.char(2)
@@ -203,7 +203,9 @@ function NewChunk(x,z)
             if request.chunkx == self.x and request.chunky == self.z then
                 for j=1, #request.blocks do
                     local block = request.blocks[j]
-                    self:setVoxel(block.x,block.y,block.z, block.value)
+                    if self:getVoxel(block.x,block.y,block.z) == 0 then
+                        self:setVoxel(block.x,block.y,block.z, block.value)
+                    end
                 end
             end
         end
