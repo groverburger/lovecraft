@@ -20,6 +20,49 @@ function NewChunk(x,z)
     local floor = 48
     local ceiling = 120
 
+    local genTree = function (x,y,z)
+        local treeHeight = 4 + math.floor(love.math.random()*3 +0.5)
+
+        local leafWidth = 2
+        for lx = -leafWidth, leafWidth do
+            for ly = -leafWidth, leafWidth do
+                local chance = 1
+                if math.abs(lx) == leafWidth and math.abs(ly) == leafWidth then
+                    chance = 0.5
+                end
+
+                if love.math.random() < chance then
+                    NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight-2,z+ly, 18)
+                end
+                if love.math.random() < chance then
+                    NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight-1,z+ly, 18)
+                end
+            end
+        end
+        local leafWidth = 1
+        for lx = -leafWidth, leafWidth do
+            for ly = -leafWidth, leafWidth do
+                local chance = 1
+                if math.abs(lx) == leafWidth and math.abs(ly) == leafWidth then
+                    chance = 0.5
+                end
+
+                local can = false
+                if love.math.random() < chance then
+                    NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight,z+ly, 18)
+                    can = true
+                end
+                if love.math.random() < chance and can then
+                    NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight+1,z+ly, 18)
+                end
+            end
+        end
+
+        for tr = 1, treeHeight do
+            NewChunkRequest(chunk.x,chunk.z, x,y+tr,z, 17)
+        end
+    end
+
     -- iterate through chunk 
     -- voxel data is stored in strings in a 2d array to simulate a 3d array of bytes
     for i=1, ChunkSize do
@@ -56,6 +99,9 @@ function NewChunk(x,z)
                             end
                         else
                             grass = false
+                            if love.math.random() < 0.01 then
+                                genTree(i,j,k)
+                            end
                             temp[yy] = string.char(2)
                         end
                         sunlight = false
@@ -149,6 +195,18 @@ function NewChunk(x,z)
             if chunkGet ~= self and chunkGet ~= nil then
                 --print("posZ")
                 chunkGet:updateModel(x,y,1, true)
+            end
+        end
+    end
+
+    chunk.processRequests = function (self)
+        for i=1, #ChunkRequests do
+            local request = ChunkRequests[i]
+            if request.chunkx == self.x and request.chunky == self.z then
+                for j=1, #request.blocks do
+                    local block = request.blocks[j]
+                    self:setVoxel(block.x,block.y,block.z, block.value)
+                end
             end
         end
     end
@@ -326,4 +384,41 @@ function NewChunkSlice(x,y,z, parent)
     t:updateModel()
 
     return t
+end
+
+-- used for building structures across chunk borders
+-- by requesting a block from a chunk
+function NewChunkRequest(chunkx,chunky, gx,gy,gz, valueg)
+    if gx < 1 then
+        chunkx = chunkx-1
+    end
+    if gx > ChunkSize then
+        chunkx = chunkx+1
+    end
+    if gz < 1 then
+        chunky = chunky-1
+    end
+    if gz > ChunkSize then
+        chunky = chunky+1
+    end
+    local lx,ly,lz = (gx-1)%ChunkSize +1, gy, (gz-1)%ChunkSize +1
+
+    local foundMe = false
+    for i=1, #ChunkRequests do
+        local request = ChunkRequests[i]
+        if request.chunkx == chunkx and request.chunky == chunky then
+            foundMe = true
+            request.blocks[#request.blocks+1] = {x = lx, y = ly, z = lz, value = valueg}
+            break
+        end
+    end
+
+    if not foundMe then
+        ChunkRequests[#ChunkRequests +1] = {}
+        local request = ChunkRequests[#ChunkRequests]
+        request.chunkx = chunkx
+        request.chunky = chunky
+        request.blocks = {}
+        request.blocks[1] = {x = lx, y = ly, z = lz, value = valueg}
+    end
 end

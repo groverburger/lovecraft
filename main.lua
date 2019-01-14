@@ -83,12 +83,25 @@ function love.load()
 
     -- generate the world, store in 2d hash table
     ChunkList = {}
+    ChunkRequests = {}
     local worldSize = 4
     for i=worldSize/-2 +1, worldSize/2 do
         print(i)
         ChunkList[ChunkHash(i)] = {}
         for j=worldSize/-2 +1, worldSize/2 do
             ChunkList[ChunkHash(i)][ChunkHash(j)] = CreateThing(NewChunk(i,j))
+        end
+    end
+    for i=1, #ChunkRequests do
+        local request = ChunkRequests[i]
+        for j=1, #request.blocks do
+            local block = request.blocks[j]
+            print(request.chunkx,request.chunky, block.x,block.y,block.z, block.value)
+        end
+    end
+    for i=worldSize/-2 +1, worldSize/2 do
+        for j=worldSize/-2 +1, worldSize/2 do
+            ChunkList[ChunkHash(i)][ChunkHash(j)]:processRequests()
         end
     end
     for i=worldSize/-2 +1, worldSize/2 do
@@ -153,10 +166,19 @@ function TileEnums(n)
         {texture = {2}, isVisible = true, isSolid = true}, -- 3 dirt
         {texture = {16}, isVisible = true, isSolid = true}, -- 4 cobble
         {texture = {4}, isVisible = true, isSolid = true}, -- 5 planks
-        {texture = {15}, isVisible = true, isSolid = true}, -- 6 sapling
+        {texture = {15}, isVisible = true, isSolid = false}, -- 6 sapling
         {texture = {17}, isVisible = true, isSolid = true}, -- 7 bedrock
-        {texture = {14}, isVisible = true, isSolid = true}, -- 8 water
-        {texture = {14}, isVisible = true, isSolid = true}, -- 9 stationary water
+        {texture = {14}, isVisible = true, isSolid = false}, -- 8 water
+        {texture = {14}, isVisible = true, isSolid = false}, -- 9 stationary water
+        {texture = {63}, isVisible = true, isSolid = false}, -- 10 lava
+        {texture = {63}, isVisible = true, isSolid = false}, -- 11 stationary lava
+        {texture = {18}, isVisible = true, isSolid = true}, -- 12 sand
+        {texture = {19}, isVisible = true, isSolid = true}, -- 13 gravel
+        {texture = {32}, isVisible = true, isSolid = true}, -- 14 gold
+        {texture = {33}, isVisible = true, isSolid = true}, -- 15 iron
+        {texture = {34}, isVisible = true, isSolid = true}, -- 16 coal
+        {texture = {20,21,21}, isVisible = true, isSolid = true}, -- 17 log
+        {texture = {52}, isVisible = true, isSolid = true}, -- 18 leaves
     }
 
     -- transforms the list into base 0 to accomodate for air blocks
