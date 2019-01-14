@@ -47,10 +47,10 @@ function love.load()
     LightingTexture = love.graphics.newCanvas(width*LightValues, height)
     local mult = 1
     love.graphics.setCanvas(LightingTexture)
-    love.graphics.clear(0,0,0,1)
+    love.graphics.clear(1,1,1,0)
     for i=LightValues, 1, -1 do
         local xx = (i-1)*width
-        love.graphics.setColor(1,1,1, mult)
+        love.graphics.setColor(mult,mult,mult)
         love.graphics.draw(TileTexture, xx,0)
         mult = mult * 0.8
     end
@@ -178,7 +178,7 @@ function TileEnums(n)
         {texture = {33}, isVisible = true, isSolid = true}, -- 15 iron
         {texture = {34}, isVisible = true, isSolid = true}, -- 16 coal
         {texture = {20,21,21}, isVisible = true, isSolid = true}, -- 17 log
-        {texture = {52}, isVisible = true, isSolid = true}, -- 18 leaves
+        {texture = {52}, isVisible = false, isSolid = true}, -- 18 leaves
     }
 
     -- transforms the list into base 0 to accomodate for air blocks

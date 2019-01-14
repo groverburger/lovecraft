@@ -21,7 +21,7 @@ function NewChunk(x,z)
     local ceiling = 120
 
     local genTree = function (x,y,z)
-        local treeHeight = 4 + math.floor(love.math.random()*3 +0.5)
+        local treeHeight = 4 + math.floor(love.math.random()*2 +0.5)
 
         local leafWidth = 2
         for lx = -leafWidth, leafWidth do
@@ -47,12 +47,10 @@ function NewChunk(x,z)
                     chance = 0.5
                 end
 
-                local can = false
                 if love.math.random() < chance then
                     NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight,z+ly, 18)
-                    can = true
                 end
-                if love.math.random() < chance and can then
+                if chance == 1 then
                     NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight+1,z+ly, 18)
                 end
             end
@@ -99,7 +97,7 @@ function NewChunk(x,z)
                             end
                         else
                             grass = false
-                            if love.math.random() < 0.01 then
+                            if love.math.random() < love.math.noise(i/32,k/32)*0.02 then
                                 genTree(i,j,k)
                             end
                             temp[yy] = string.char(2)
@@ -237,10 +235,10 @@ function NewChunkSlice(x,y,z, parent)
                     local scale = 1
                     local x,y,z = (self.x-1)*ChunkSize + i-1, 1*j*scale, (self.z-1)*ChunkSize + k-1
 
-                    if this == 0 then
+                    if this == 0 or not TileEnums(this).isVisible then
                         -- top
                         local get = self.parent:getVoxel(i,j-1,k)
-                        if TileEnums(get).isVisible then
+                        if get ~= 0 then
                             local otx,oty = NumberToCoord(TileEnums(get).texture[math.min(2, #TileEnums(get).texture)], 16,16)
                             otx = otx + 16*thisLight
                             local otx2,oty2 = otx+1,oty+1
@@ -257,7 +255,7 @@ function NewChunkSlice(x,y,z, parent)
 
                         -- bottom
                         local get = self.parent:getVoxel(i,j+1,k)
-                        if TileEnums(get).isVisible then
+                        if get ~= 0 then
                             local otx,oty = NumberToCoord(TileEnums(get).texture[math.min(3, #TileEnums(get).texture)], 16,16)
                             otx = otx + 16*(thisLight-1)
                             local otx2,oty2 = otx+1,oty+1
@@ -280,7 +278,7 @@ function NewChunkSlice(x,y,z, parent)
                                 get = chunkGet:getVoxel(ChunkSize,j,k)
                             end
                         end
-                        if TileEnums(get).isVisible then
+                        if get ~= 0 then
                             local otx,oty = NumberToCoord(TileEnums(get).texture[1], 16,16)
                             otx = otx + 16*(thisLight-1)
                             local otx2,oty2 = otx+1,oty+1
@@ -303,7 +301,7 @@ function NewChunkSlice(x,y,z, parent)
                                 get = chunkGet:getVoxel(1,j,k)
                             end
                         end
-                        if TileEnums(get).isVisible then
+                        if get ~= 0 then
                             local otx,oty = NumberToCoord(TileEnums(get).texture[1], 16,16)
                             otx = otx + 16*(thisLight-1)
                             local otx2,oty2 = otx+1,oty+1
@@ -326,7 +324,7 @@ function NewChunkSlice(x,y,z, parent)
                                 get = chunkGet:getVoxel(i,j,ChunkSize)
                             end
                         end
-                        if TileEnums(get).isVisible then
+                        if get ~= 0 then
                             local otx,oty = NumberToCoord(TileEnums(get).texture[1], 16,16)
                             otx = otx + 16*thisLight
                             local otx2,oty2 = otx+1,oty+1
@@ -349,7 +347,7 @@ function NewChunkSlice(x,y,z, parent)
                                 get = chunkGet:getVoxel(i,j,1)
                             end
                         end
-                        if TileEnums(get).isVisible then
+                        if get ~= 0 then
                             local otx,oty = NumberToCoord(TileEnums(get).texture[1], 16,16)
                             otx = otx + 16*thisLight
                             local otx2,oty2 = otx+1,oty+1
