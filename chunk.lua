@@ -2,117 +2,12 @@ function ReplaceChar(str, pos, r)
     return str:sub(1, pos-1) .. r .. str:sub(pos+#r)
 end
 
--- noise function used in chunk generation
-function ChunkNoise(x,y,z)
-    local freq = 16
-    local yfreq = 12
-    return love.math.noise(x/freq + Salt[1]*100000,y/yfreq + Salt[2]*100000,z/freq + Salt[3]*100000)
-end
-
 function NewChunk(x,z)
     local chunk = NewThing(x,0,z)
     chunk.voxels = {}
     chunk.slices = {}
 
-    -- chunk generation
-    local dirt = 4
-    local grass = true
-    local floor = 48
-    local ceiling = 120
-
-    local genTree = function (x,y,z)
-        local treeHeight = 4 + math.floor(love.math.random()*2 +0.5)
-
-        for tr = 1, treeHeight do
-            NewChunkRequest(chunk.x,chunk.z, x,y+tr,z, 17)
-        end
-
-        local leafWidth = 2
-        for lx = -leafWidth, leafWidth do
-            for ly = -leafWidth, leafWidth do
-                local chance = 1
-                if math.abs(lx) == leafWidth and math.abs(ly) == leafWidth then
-                    chance = 0.5
-                end
-
-                if love.math.random() < chance then
-                    NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight-2,z+ly, 18)
-                end
-                if love.math.random() < chance then
-                    NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight-1,z+ly, 18)
-                end
-            end
-        end
-        local leafWidth = 1
-        for lx = -leafWidth, leafWidth do
-            for ly = -leafWidth, leafWidth do
-                local chance = 1
-                if math.abs(lx) == leafWidth and math.abs(ly) == leafWidth then
-                    chance = 0.5
-                end
-
-                if love.math.random() < chance then
-                    NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight,z+ly, 18)
-                end
-                if chance == 1 then
-                    NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight+1,z+ly, 18)
-                end
-            end
-        end
-    end
-
-    -- iterate through chunk 
-    -- voxel data is stored in strings in a 2d array to simulate a 3d array of bytes
-    for i=1, ChunkSize do
-        chunk.voxels[i] = {}
-        for k=1, ChunkSize do
-            local temp = {}
-
-            -- for every x and z value start at top of world going down
-            -- when hit first solid block is grass, next four are dirt
-            local sunlight = true
-            for j=WorldHeight, 1,-1 do
-                local xx = (x-1)*ChunkSize + i
-                local zz = (z-1)*ChunkSize + k
-                local yy = (j-1)*2 +1
-
-                temp[yy+1] = string.char(12)
-                if sunlight then
-                    temp[yy+1] = string.char(15)
-                end
-
-                if j < floor then
-                    temp[yy] = string.char(1)
-                    sunlight = false
-                else
-                    temp[yy] = string.char(0)
-
-                    if ChunkNoise(xx,j,zz) > (j-floor)/(ceiling-floor) then
-                        if not grass then
-                            if dirt > 0 then
-                                dirt = dirt - 1
-                                temp[yy] = string.char(3)
-                            else
-                                temp[yy] = string.char(1)
-                            end
-                        else
-                            grass = false
-                            if love.math.random() < love.math.noise(i/32,k/32)*0.02 and sunlight then
-                                genTree(i,j,k)
-                            end
-                            temp[yy] = string.char(2)
-                        end
-                        sunlight = false
-                    else
-                        grass = true
-                        dirt = 4
-                    end
-                end
-            end
-
-            chunk.voxels[i][k] = table.concat(temp)
-        end
-    end
+    ClassicGeneration(chunk, x,z)
 
     -- get voxel id of the voxel in this chunk's coordinate space
     chunk.getVoxel = function (self, x,y,z)
@@ -250,8 +145,8 @@ function NewChunkSlice(x,y,z, parent)
                             model[#model+1] = {x, y, z, tx,ty}
                             model[#model+1] = {x+scale, y, z, tx2,ty}
                             model[#model+1] = {x, y, z+scale, tx,ty2}
-                            model[#model+1] = {x+scale, y, z+scale, tx2,ty2}
                             model[#model+1] = {x+scale, y, z, tx2,ty}
+                            model[#model+1] = {x+scale, y, z+scale, tx2,ty2}
                             model[#model+1] = {x, y, z+scale, tx,ty2}
                         end
 
@@ -259,7 +154,7 @@ function NewChunkSlice(x,y,z, parent)
                         local get = self.parent:getVoxel(i,j+1,k)
                         if get ~= 0 then
                             local otx,oty = NumberToCoord(TileEnums(get).texture[math.min(3, #TileEnums(get).texture)], 16,16)
-                            otx = otx + 16*(thisLight-1)
+                            otx = otx + 16*(thisLight-3)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
@@ -267,8 +162,8 @@ function NewChunkSlice(x,y,z, parent)
                             model[#model+1] = {x, y+scale, z, tx,ty}
                             model[#model+1] = {x+scale, y+scale, z, tx2,ty}
                             model[#model+1] = {x, y+scale, z+scale, tx,ty2}
-                            model[#model+1] = {x+scale, y+scale, z+scale, tx2,ty2}
                             model[#model+1] = {x+scale, y+scale, z, tx2,ty}
+                            model[#model+1] = {x+scale, y+scale, z+scale, tx2,ty2}
                             model[#model+1] = {x, y+scale, z+scale, tx,ty2}
                         end
 
@@ -282,13 +177,13 @@ function NewChunkSlice(x,y,z, parent)
                         end
                         if get ~= 0 then
                             local otx,oty = NumberToCoord(TileEnums(get).texture[1], 16,16)
-                            otx = otx + 16*(thisLight-1)
+                            otx = otx + 16*(thisLight-2)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
 
-                            model[#model+1] = {x, y, z, tx2,ty2}
                             model[#model+1] = {x, y+scale, z, tx2,ty}
+                            model[#model+1] = {x, y, z, tx2,ty2}
                             model[#model+1] = {x, y, z+scale, tx,ty2}
                             model[#model+1] = {x, y+scale, z+scale, tx,ty}
                             model[#model+1] = {x, y+scale, z, tx2,ty}
@@ -305,7 +200,7 @@ function NewChunkSlice(x,y,z, parent)
                         end
                         if get ~= 0 then
                             local otx,oty = NumberToCoord(TileEnums(get).texture[1], 16,16)
-                            otx = otx + 16*(thisLight-1)
+                            otx = otx + 16*(thisLight-2)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
@@ -313,8 +208,8 @@ function NewChunkSlice(x,y,z, parent)
                             model[#model+1] = {x+scale, y, z, tx,ty2}
                             model[#model+1] = {x+scale, y+scale, z, tx,ty}
                             model[#model+1] = {x+scale, y, z+scale, tx2,ty2}
-                            model[#model+1] = {x+scale, y+scale, z+scale, tx2,ty}
                             model[#model+1] = {x+scale, y+scale, z, tx,ty}
+                            model[#model+1] = {x+scale, y+scale, z+scale, tx2,ty}
                             model[#model+1] = {x+scale, y, z+scale, tx2,ty2}
                         end
 
@@ -328,7 +223,7 @@ function NewChunkSlice(x,y,z, parent)
                         end
                         if get ~= 0 then
                             local otx,oty = NumberToCoord(TileEnums(get).texture[1], 16,16)
-                            otx = otx + 16*thisLight
+                            otx = otx + 16*(thisLight-1)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
@@ -336,8 +231,8 @@ function NewChunkSlice(x,y,z, parent)
                             model[#model+1] = {x, y, z, tx,ty2}
                             model[#model+1] = {x, y+scale, z, tx,ty}
                             model[#model+1] = {x+scale, y, z, tx2,ty2}
-                            model[#model+1] = {x+scale, y+scale, z, tx2,ty}
                             model[#model+1] = {x, y+scale, z, tx,ty}
+                            model[#model+1] = {x+scale, y+scale, z, tx2,ty}
                             model[#model+1] = {x+scale, y, z, tx2,ty2}
                         end
 
@@ -351,13 +246,13 @@ function NewChunkSlice(x,y,z, parent)
                         end
                         if get ~= 0 then
                             local otx,oty = NumberToCoord(TileEnums(get).texture[1], 16,16)
-                            otx = otx + 16*thisLight
+                            otx = otx + 16*(thisLight-1)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
 
-                            model[#model+1] = {x, y, z+scale, tx2,ty2}
                             model[#model+1] = {x, y+scale, z+scale, tx2,ty}
+                            model[#model+1] = {x, y, z+scale, tx2,ty2}
                             model[#model+1] = {x+scale, y, z+scale, tx,ty2}
                             model[#model+1] = {x+scale, y+scale, z+scale, tx,ty}
                             model[#model+1] = {x, y+scale, z+scale, tx2,ty}

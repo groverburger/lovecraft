@@ -2,6 +2,7 @@ Engine = require "engine"
 Perspective = require "perspective"
 require "things"
 require "player"
+require "generator"
 require "chunk"
 
 function love.load()
@@ -11,6 +12,7 @@ function love.load()
     love.graphics.setBackgroundColor(0,0.7,0.95)
     love.mouse.setRelativeMode(true)
     love.graphics.setDefaultFilter("nearest", "nearest")
+    love.graphics.setMeshCullMode("back")
     love.graphics.setLineStyle("rough")
     love.window.setMode(GraphicsWidth,GraphicsHeight, {vsync=true})
     love.window.setTitle("lövecraft")
@@ -77,14 +79,19 @@ function love.load()
     for i=1, 36 do
         PlayerInventory.items[i] = 0
     end
-    for i=1, 9 do
-        PlayerInventory.items[i] = i
-    end
+    PlayerInventory.items[1] = 1
+    PlayerInventory.items[2] = 4
+    PlayerInventory.items[3] = 45
+    PlayerInventory.items[4] = 3
+    PlayerInventory.items[5] = 5
+    PlayerInventory.items[6] = 17
+    PlayerInventory.items[7] = 18
+    PlayerInventory.items[8] = 20
 
     -- generate the world, store in 2d hash table
     ChunkList = {}
     ChunkRequests = {}
-    local worldSize = 4
+    local worldSize = 6
     for i=worldSize/-2 +1, worldSize/2 do
         print(i)
         ChunkList[ChunkHash(i)] = {}
@@ -179,7 +186,10 @@ function TileEnums(n)
         {texture = {34}, isVisible = true, isSolid = true}, -- 16 coal
         {texture = {20,21,21}, isVisible = true, isSolid = true}, -- 17 log
         {texture = {52}, isVisible = false, isSolid = true}, -- 18 leaves
+        {texture = {48}, isVisible = true, isSolid = true}, -- 19 sponge
+        {texture = {49}, isVisible = false, isSolid = true}, -- 20 glass
     }
+    list[46] = {texture = {7}, isVisible = true, isSolid = true} -- 18 leaves
 
     -- transforms the list into base 0 to accomodate for air blocks
     return list[n+1]
