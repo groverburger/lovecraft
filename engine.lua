@@ -38,6 +38,9 @@ function engine.newModel(verts, texture, coords, color, format)
         love.graphics.clear(unpack(color))
         love.graphics.setCanvas()
     end
+    if verts == nil then
+        verts = {}
+    end
 
     -- translate verts by given coords
     for i=1, #verts do
@@ -53,8 +56,12 @@ function engine.newModel(verts, texture, coords, color, format)
     end
 
     -- define the Model object's properties
-	m.mesh = love.graphics.newMesh(format, verts, "triangles")
-    m.mesh:setTexture(texture)
+    m.mesh = nil
+    if #verts > 0 then
+        m.mesh = love.graphics.newMesh(format, verts, "triangles")
+        m.mesh:setTexture(texture)
+    end
+    m.texture = texture
     m.verts = verts
     m.transform = TransposeMatrix(cpml.mat4.identity())
     m.color = color
@@ -62,6 +69,14 @@ function engine.newModel(verts, texture, coords, color, format)
     m.dead = false
     m.wireframe = false
     m.culling = false
+
+    m.setVerts = function (self, verts)
+        if #verts > 0 then
+            self.mesh = love.graphics.newMesh(format, verts, "triangles")
+            self.mesh:setTexture(self.texture)
+        end
+        self.verts = verts
+    end
 
     -- translate and rotate the Model
     m.setTransform = function (self, coords, rotations)
@@ -215,7 +230,7 @@ function engine.newScene(renderWidth,renderHeight)
         
         for i=1, #self.modelList do
             local model = self.modelList[i]
-            if model ~= nil and model.visible then
+            if model ~= nil and model.visible and #model.verts > 0 then
                 self.threeShader:send("model_matrix", model.transform)
                 -- need the inverse to compute normals when model is rotated
                 --self.threeShader:send("model_matrix_inverse", TransposeMatrix(InvertMatrix(model.transform)))

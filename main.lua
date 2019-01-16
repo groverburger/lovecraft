@@ -184,9 +184,6 @@ function DrawHudTile(tile, x,y)
     -- weirdly returning one index arrays as raw numbers
     -- check for that
     local textures = TileTextures(tile)
-    if type(textures) == "number" then
-        textures = {textures}
-    end
 
     if tile == 0 or textures == nil then
         return

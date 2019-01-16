@@ -123,6 +123,9 @@ end
 function NewChunkSlice(x,y,z, parent)
     local t = NewThing(x,y,z)
     t.parent = parent
+    local compmodel = Engine.newModel(nil, LightingTexture, {0,0,0})
+    compmodel.culling = true
+    t:assignModel(compmodel)
 
     t.updateModel = function (self)
         local model = {}
@@ -272,18 +275,7 @@ function NewChunkSlice(x,y,z, parent)
             end
         end
 
-        local visible = true
-        -- models can't be deleted easily, so make it invisible when no verts in mesh
-        if #model == 0 then
-            model[#model+1] = {0, 0, 0}
-            model[#model+1] = {1, 0, 0}
-            model[#model+1] = {0, 1, 0}
-            visible = false
-        end
-        local compmodel = Engine.newModel(model, LightingTexture, {0,0,0})
-        compmodel.visible = visible
-        compmodel.culling = true
-        self:assignModel(compmodel)
+        self.model:setVerts(model)
     end
 
     t:updateModel()
