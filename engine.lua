@@ -62,6 +62,7 @@ function engine.newModel(verts, texture, coords, color, format)
     m.visible = true
     m.dead = false
     m.wireframe = false
+    m.culling = false
 
     -- translate and rotate the Model
     m.setTransform = function (self, coords, rotations)
@@ -220,7 +221,11 @@ function engine.newScene(renderWidth,renderHeight)
                 -- need the inverse to compute normals when model is rotated
                 --self.threeShader:send("model_matrix_inverse", TransposeMatrix(InvertMatrix(model.transform)))
                 love.graphics.setWireframe(model.wireframe)
+                if model.culling then
+                    love.graphics.setMeshCullMode("back")
+                end
                 love.graphics.draw(model.mesh, -self.renderWidth/2, -self.renderHeight/2)
+                love.graphics.setMeshCullMode("none")
                 love.graphics.setWireframe(false)
             end
         end

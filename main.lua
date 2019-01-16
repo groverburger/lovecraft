@@ -12,7 +12,6 @@ function love.load()
     love.graphics.setBackgroundColor(0,0.7,0.95)
     love.mouse.setRelativeMode(true)
     love.graphics.setDefaultFilter("nearest", "nearest")
-    love.graphics.setMeshCullMode("back")
     love.graphics.setLineStyle("rough")
     love.window.setMode(GraphicsWidth,GraphicsHeight, {vsync=true})
     love.window.setTitle("lövecraft")
@@ -195,6 +194,54 @@ function TileEnums(n)
     return list[n+1]
 end
 
+function TileTransparency(n)
+    if n == 0 then -- air (fully transparent)
+        return 0
+    end
+
+    if n == 18 then -- leaves (not very transparent)
+        return 1
+    end
+
+    if n == 20 then -- glass (very transparent)
+        return 2
+    end
+
+    return 3 -- solid (opaque)
+end
+
+function TileTextures(n)
+    local list = {
+        -- textures are in format: SIDE UP DOWN FRONT
+        -- at least one texture must be present
+        {0}, -- 0 air
+        {1}, -- 1 stone
+        {3,0,2}, -- 2 grass
+        {2}, -- 3 dirt
+        {16}, -- 4 cobble
+        {4}, -- 5 planks
+        {15}, -- 6 sapling
+        {17}, -- 7 bedrock
+        {14}, -- 8 water
+        {14}, -- 9 stationary water
+        {63}, -- 10 lava
+        {63}, -- 11 stationary lava
+        {18}, -- 12 sand
+        {19}, -- 13 gravel
+        {32}, -- 14 gold
+        {33}, -- 15 iron
+        {34}, -- 16 coal
+        {20,21,21}, -- 17 log
+        {52}, -- 18 leaves
+        {48}, -- 19 sponge
+        {49}, -- 20 glass
+    }
+    list[46] = 7 -- 18 leaves
+
+    -- transforms the list into base 0 to accomodate for air blocks
+    return list[n+1]
+end
+
 function love.update(dt)
     -- update 3d scene
     Scene:update()
@@ -231,7 +278,7 @@ function DrawHudTile(tile, x,y)
     Perspective.quad(TileCanvas[textures[math.min(#textures, 2)]+1], {x,y-size},{x +xsize,y-ysize},centerPoint,{x-xsize,y-ysize})
 
     -- right side front
-    local shade1 = 0.6
+    local shade1 = 0.8^3
     love.graphics.setColor(shade1,shade1,shade1)
     local index = 1
     if #textures == 4 then
@@ -240,7 +287,7 @@ function DrawHudTile(tile, x,y)
     Perspective.quad(TileCanvas[textures[index]+1], centerPoint,{x +xsize,y -ysize},{x+xsize,y+ysize},{x,y+size})
 
     -- left side side
-    local shade2 = 0.75
+    local shade2 = 0.8^2
     love.graphics.setColor(shade2,shade2,shade2)
     Perspective.flip = true
     Perspective.quad(TileCanvas[textures[1]+1], centerPoint,{x -xsize,y -ysize},{x-xsize,y+ysize},{x,y+size})

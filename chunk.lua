@@ -115,6 +115,14 @@ function NewChunk(x,z)
     return chunk
 end
 
+function CanDrawFace(get, thisTransparency)
+    local tget = TileTransparency(get)
+
+    -- tget > 0 means can only draw faces from outside in (bc transparency of 0 is air)
+    -- must be different transparency to draw, except for tree leaves which have transparency of 1
+    return (tget ~= thisTransparency or tget == 1) and tget > 0
+end
+
 function NewChunkSlice(x,y,z, parent)
     local t = NewThing(x,y,z)
     t.parent = parent
@@ -129,14 +137,19 @@ function NewChunkSlice(x,y,z, parent)
             for j=math.max(self.y, 1), self.y+SliceHeight do
                 for k=1, ChunkSize do
                     local this, thisLight = self.parent:getVoxel(i,j,k)
+                    local thisTransparency = TileTransparency(this)
                     local scale = 1
                     local x,y,z = (self.x-1)*ChunkSize + i-1, 1*j*scale, (self.z-1)*ChunkSize + k-1
 
-                    if this == 0 or not TileEnums(this).isVisible then
+                    if thisTransparency < 3 then
+                        -- if not checking for tget == 0, then it will render the "faces" of airblocks 
+                        -- on transparent block edges
+
+
                         -- top
                         local get = self.parent:getVoxel(i,j-1,k)
-                        if get ~= 0 then
-                            local otx,oty = NumberToCoord(TileEnums(get).texture[math.min(2, #TileEnums(get).texture)], 16,16)
+                        if CanDrawFace(get, thisTransparency) then
+                            local otx,oty = NumberToCoord(TileTextures(get)[math.min(2, #TileTextures(get))], 16,16)
                             otx = otx + 16*thisLight
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
@@ -152,18 +165,18 @@ function NewChunkSlice(x,y,z, parent)
 
                         -- bottom
                         local get = self.parent:getVoxel(i,j+1,k)
-                        if get ~= 0 then
-                            local otx,oty = NumberToCoord(TileEnums(get).texture[math.min(3, #TileEnums(get).texture)], 16,16)
+                        if CanDrawFace(get, thisTransparency) then
+                            local otx,oty = NumberToCoord(TileTextures(get)[math.min(3, #TileTextures(get))], 16,16)
                             otx = otx + 16*(thisLight-3)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
 
+                            model[#model+1] = {x+scale, y+scale, z, tx2,ty}
                             model[#model+1] = {x, y+scale, z, tx,ty}
-                            model[#model+1] = {x+scale, y+scale, z, tx2,ty}
                             model[#model+1] = {x, y+scale, z+scale, tx,ty2}
-                            model[#model+1] = {x+scale, y+scale, z, tx2,ty}
                             model[#model+1] = {x+scale, y+scale, z+scale, tx2,ty2}
+                            model[#model+1] = {x+scale, y+scale, z, tx2,ty}
                             model[#model+1] = {x, y+scale, z+scale, tx,ty2}
                         end
 
@@ -175,8 +188,8 @@ function NewChunkSlice(x,y,z, parent)
                                 get = chunkGet:getVoxel(ChunkSize,j,k)
                             end
                         end
-                        if get ~= 0 then
-                            local otx,oty = NumberToCoord(TileEnums(get).texture[1], 16,16)
+                        if CanDrawFace(get, thisTransparency) then
+                            local otx,oty = NumberToCoord(TileTextures(get)[1], 16,16)
                             otx = otx + 16*(thisLight-2)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
@@ -198,8 +211,8 @@ function NewChunkSlice(x,y,z, parent)
                                 get = chunkGet:getVoxel(1,j,k)
                             end
                         end
-                        if get ~= 0 then
-                            local otx,oty = NumberToCoord(TileEnums(get).texture[1], 16,16)
+                        if CanDrawFace(get, thisTransparency) then
+                            local otx,oty = NumberToCoord(TileTextures(get)[1], 16,16)
                             otx = otx + 16*(thisLight-2)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
@@ -221,8 +234,8 @@ function NewChunkSlice(x,y,z, parent)
                                 get = chunkGet:getVoxel(i,j,ChunkSize)
                             end
                         end
-                        if get ~= 0 then
-                            local otx,oty = NumberToCoord(TileEnums(get).texture[1], 16,16)
+                        if CanDrawFace(get, thisTransparency) then
+                            local otx,oty = NumberToCoord(TileTextures(get)[1], 16,16)
                             otx = otx + 16*(thisLight-1)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
@@ -244,8 +257,8 @@ function NewChunkSlice(x,y,z, parent)
                                 get = chunkGet:getVoxel(i,j,1)
                             end
                         end
-                        if get ~= 0 then
-                            local otx,oty = NumberToCoord(TileEnums(get).texture[1], 16,16)
+                        if CanDrawFace(get, thisTransparency) then
+                            local otx,oty = NumberToCoord(TileTextures(get)[1], 16,16)
                             otx = otx + 16*(thisLight-1)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
@@ -273,6 +286,7 @@ function NewChunkSlice(x,y,z, parent)
         end
         local compmodel = Engine.newModel(model, LightingTexture, {0,0,0})
         compmodel.visible = visible
+        compmodel.culling = true
         self:assignModel(compmodel)
     end
 
