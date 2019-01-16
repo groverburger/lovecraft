@@ -208,7 +208,7 @@ function ClassicGeneration(chunk, x,z)
                         else
                             grass = false
                             temp[yy] = string.char(2)
-                            if love.math.random() < love.math.noise(i/32,k/32)*0.02 and sunlight then
+                            if love.math.random() < 0.02 and love.math.noise(i/32,k/32) > 0.6 and sunlight then
                                 genTree(i,j,k)
                                 temp[yy] = string.char(3)
                             end

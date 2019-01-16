@@ -23,15 +23,15 @@ function NewPlayer(x,y,z)
 
         -- determine if player has hit ground this frame
         self.onGround = false
-        if TileEnums(GetVoxel(self.x+self.width,self.y+self.ySpeed,self.z+self.width)).isSolid
-        or TileEnums(GetVoxel(self.x+self.width,self.y+self.ySpeed,self.z-self.width)).isSolid
-        or TileEnums(GetVoxel(self.x-self.width,self.y+self.ySpeed,self.z+self.width)).isSolid
-        or TileEnums(GetVoxel(self.x-self.width,self.y+self.ySpeed,self.z-self.width)).isSolid then
+        if TileCollisions(GetVoxel(self.x+self.width,self.y+self.ySpeed,self.z+self.width))
+        or TileCollisions(GetVoxel(self.x+self.width,self.y+self.ySpeed,self.z-self.width))
+        or TileCollisions(GetVoxel(self.x-self.width,self.y+self.ySpeed,self.z+self.width))
+        or TileCollisions(GetVoxel(self.x-self.width,self.y+self.ySpeed,self.z-self.width)) then
             local i = 0
-            while not TileEnums(GetVoxel(self.x+self.width,self.y+i,self.z+self.width)).isSolid
-            and not TileEnums(GetVoxel(self.x+self.width,self.y+i,self.z-self.width)).isSolid
-            and not TileEnums(GetVoxel(self.x-self.width,self.y+i,self.z+self.width)).isSolid
-            and not TileEnums(GetVoxel(self.x-self.width,self.y+i,self.z-self.width)).isSolid do
+            while not TileCollisions(GetVoxel(self.x+self.width,self.y+i,self.z+self.width))
+            and not TileCollisions(GetVoxel(self.x+self.width,self.y+i,self.z-self.width))
+            and not TileCollisions(GetVoxel(self.x-self.width,self.y+i,self.z+self.width))
+            and not TileCollisions(GetVoxel(self.x-self.width,self.y+i,self.z-self.width)) do
                 i = i-0.01
             end
             self.y = self.y + i+0.01
@@ -75,10 +75,10 @@ function NewPlayer(x,y,z)
 
         -- hit head ceilings
         if math.abs(self.ySpeed) == self.ySpeed
-        and (TileEnums(GetVoxel(self.x-self.width,self.y+self.height+self.ySpeed,self.z+self.width)).isSolid
-        or TileEnums(GetVoxel(self.x-self.width,self.y+self.height+self.ySpeed,self.z-self.width)).isSolid
-        or TileEnums(GetVoxel(self.x+self.width,self.y+self.height+self.ySpeed,self.z+self.width)).isSolid
-        or TileEnums(GetVoxel(self.x+self.width,self.y+self.height+self.ySpeed,self.z-self.width)).isSolid) then
+        and (TileCollisions(GetVoxel(self.x-self.width,self.y+self.height+self.ySpeed,self.z+self.width))
+        or TileCollisions(GetVoxel(self.x-self.width,self.y+self.height+self.ySpeed,self.z-self.width))
+        or TileCollisions(GetVoxel(self.x+self.width,self.y+self.height+self.ySpeed,self.z+self.width))
+        or TileCollisions(GetVoxel(self.x+self.width,self.y+self.height+self.ySpeed,self.z-self.width))) then
             self.ySpeed = -0.5*self.ySpeed
         end
 
@@ -94,10 +94,10 @@ function NewPlayer(x,y,z)
         self.y = self.y + self.ySpeed
 
         -- check for collisions with walls along the x direction
-        if not TileEnums(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y,self.z -self.width)).isSolid
-        and not TileEnums(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y+1,self.z -self.width)).isSolid 
-        and not TileEnums(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y,self.z +self.width)).isSolid
-        and not TileEnums(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y+1,self.z +self.width)).isSolid then
+        if not TileCollisions(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y,self.z -self.width))
+        and not TileCollisions(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y+1,self.z -self.width)) 
+        and not TileCollisions(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y,self.z +self.width))
+        and not TileCollisions(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y+1,self.z +self.width)) then
             -- x values are good, cement them
             self.x = self.x + self.xSpeed
         else
@@ -105,10 +105,10 @@ function NewPlayer(x,y,z)
         end
 
         -- check for collisions with walls along the z direction
-        if not TileEnums(GetVoxel(self.x -self.width,self.y,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width)).isSolid
-        and not TileEnums(GetVoxel(self.x -self.width,self.y+1,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width)).isSolid 
-        and not TileEnums(GetVoxel(self.x +self.width,self.y,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width)).isSolid
-        and not TileEnums(GetVoxel(self.x +self.width,self.y+1,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width)).isSolid then
+        if not TileCollisions(GetVoxel(self.x -self.width,self.y,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width))
+        and not TileCollisions(GetVoxel(self.x -self.width,self.y+1,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width)) 
+        and not TileCollisions(GetVoxel(self.x +self.width,self.y,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width))
+        and not TileCollisions(GetVoxel(self.x +self.width,self.y+1,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width)) then
             -- z values are good, cement them
             self.z = self.z + self.zSpeed
         else

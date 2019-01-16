@@ -7,7 +7,7 @@ function NewChunk(x,z)
     chunk.voxels = {}
     chunk.slices = {}
 
-    ClassicGeneration(chunk, x,z)
+    DefaultGeneration(chunk, x,z)
 
     -- get voxel id of the voxel in this chunk's coordinate space
     chunk.getVoxel = function (self, x,y,z)
@@ -71,27 +71,24 @@ function NewChunk(x,z)
         if not mustStop then
             local chunkGet = GetChunk(xx-1,y,zz)
             if chunkGet ~= self and chunkGet ~= nil then
-                --print("negX")
                 chunkGet:updateModel(ChunkSize,y,z, true)
             end
             local chunkGet = GetChunk(xx+1,y,zz)
             if chunkGet ~= self and chunkGet ~= nil then
-                --print("posX")
                 chunkGet:updateModel(1,y,z, true)
             end
             local chunkGet = GetChunk(xx,y,zz-1)
             if chunkGet ~= self and chunkGet ~= nil then
-                --print("negZ")
                 chunkGet:updateModel(x,y,ChunkSize, true)
             end
             local chunkGet = GetChunk(xx,y,zz+1)
             if chunkGet ~= self and chunkGet ~= nil then
-                --print("posZ")
                 chunkGet:updateModel(x,y,1, true)
             end
         end
     end
 
+    -- process all requested blocks upon creation of chunk
     chunk.processRequests = function (self)
         for i=1, #ChunkRequests do
             local request = ChunkRequests[i]
@@ -144,7 +141,6 @@ function NewChunkSlice(x,y,z, parent)
                     if thisTransparency < 3 then
                         -- if not checking for tget == 0, then it will render the "faces" of airblocks 
                         -- on transparent block edges
-
 
                         -- top
                         local get = self.parent:getVoxel(i,j-1,k)
@@ -296,7 +292,7 @@ function NewChunkSlice(x,y,z, parent)
 end
 
 -- used for building structures across chunk borders
--- by requesting a block from a chunk
+-- by requesting a block to be built in a chunk that does not yet exist
 function NewChunkRequest(chunkx,chunky, gx,gy,gz, valueg)
     if gx < 1 then
         chunkx = chunkx-1

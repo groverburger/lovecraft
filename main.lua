@@ -1,5 +1,6 @@
 Engine = require "engine"
 Perspective = require "perspective"
+require "tiledata"
 require "things"
 require "player"
 require "generator"
@@ -161,87 +162,6 @@ function GetVoxel(x,y,z)
     return v
 end
 
--- tile enumerations stored as a function called by tile index (base 0 to accomodate air)
-function TileEnums(n)
-    local list = {
-        -- textures are in format: SIDE UP DOWN FRONT
-        -- at least one texture must be present
-        {texture = {0}, isVisible = false, isSolid = false}, -- 0 air
-        {texture = {1}, isVisible = true, isSolid = true}, -- 1 stone
-        {texture = {3,0,2}, isVisible = true, isSolid = true}, -- 2 grass
-        {texture = {2}, isVisible = true, isSolid = true}, -- 3 dirt
-        {texture = {16}, isVisible = true, isSolid = true}, -- 4 cobble
-        {texture = {4}, isVisible = true, isSolid = true}, -- 5 planks
-        {texture = {15}, isVisible = true, isSolid = false}, -- 6 sapling
-        {texture = {17}, isVisible = true, isSolid = true}, -- 7 bedrock
-        {texture = {14}, isVisible = true, isSolid = false}, -- 8 water
-        {texture = {14}, isVisible = true, isSolid = false}, -- 9 stationary water
-        {texture = {63}, isVisible = true, isSolid = false}, -- 10 lava
-        {texture = {63}, isVisible = true, isSolid = false}, -- 11 stationary lava
-        {texture = {18}, isVisible = true, isSolid = true}, -- 12 sand
-        {texture = {19}, isVisible = true, isSolid = true}, -- 13 gravel
-        {texture = {32}, isVisible = true, isSolid = true}, -- 14 gold
-        {texture = {33}, isVisible = true, isSolid = true}, -- 15 iron
-        {texture = {34}, isVisible = true, isSolid = true}, -- 16 coal
-        {texture = {20,21,21}, isVisible = true, isSolid = true}, -- 17 log
-        {texture = {52}, isVisible = false, isSolid = true}, -- 18 leaves
-        {texture = {48}, isVisible = true, isSolid = true}, -- 19 sponge
-        {texture = {49}, isVisible = false, isSolid = true}, -- 20 glass
-    }
-    list[46] = {texture = {7}, isVisible = true, isSolid = true} -- 18 leaves
-
-    -- transforms the list into base 0 to accomodate for air blocks
-    return list[n+1]
-end
-
-function TileTransparency(n)
-    if n == 0 then -- air (fully transparent)
-        return 0
-    end
-
-    if n == 18 then -- leaves (not very transparent)
-        return 1
-    end
-
-    if n == 20 then -- glass (very transparent)
-        return 2
-    end
-
-    return 3 -- solid (opaque)
-end
-
-function TileTextures(n)
-    local list = {
-        -- textures are in format: SIDE UP DOWN FRONT
-        -- at least one texture must be present
-        {0}, -- 0 air
-        {1}, -- 1 stone
-        {3,0,2}, -- 2 grass
-        {2}, -- 3 dirt
-        {16}, -- 4 cobble
-        {4}, -- 5 planks
-        {15}, -- 6 sapling
-        {17}, -- 7 bedrock
-        {14}, -- 8 water
-        {14}, -- 9 stationary water
-        {63}, -- 10 lava
-        {63}, -- 11 stationary lava
-        {18}, -- 12 sand
-        {19}, -- 13 gravel
-        {32}, -- 14 gold
-        {33}, -- 15 iron
-        {34}, -- 16 coal
-        {20,21,21}, -- 17 log
-        {52}, -- 18 leaves
-        {48}, -- 19 sponge
-        {49}, -- 20 glass
-    }
-    list[46] = 7 -- 18 leaves
-
-    -- transforms the list into base 0 to accomodate for air blocks
-    return list[n+1]
-end
-
 function love.update(dt)
     -- update 3d scene
     Scene:update()
@@ -261,7 +181,13 @@ function love.update(dt)
 end
 
 function DrawHudTile(tile, x,y)
-    local textures = TileEnums(tile).texture
+    -- weirdly returning one index arrays as raw numbers
+    -- check for that
+    local textures = TileTextures(tile)
+    if type(textures) == "number" then
+        textures = {textures}
+    end
+
     if tile == 0 or textures == nil then
         return
     end
