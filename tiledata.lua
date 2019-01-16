@@ -54,13 +54,9 @@ function TileTextures(n)
         {48}, -- 19 sponge
         {49}, -- 20 glass
     }
-    list[46] = 7 -- 18 leaves
+    list[46] = {7} -- 18 leaves
 
     -- transforms the list into base 0 to accomodate for air blocks
-    local tx = list[n+1]
-    if type(tx) == "number" then
-        textures = {tx}
-    end
-    return tx
+    return list[n+1]
 end
 
