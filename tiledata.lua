@@ -5,7 +5,11 @@ function TileCollisions(n)
     or n == 8
     or n == 9
     or n == 10
-    or n == 11 then
+    or n == 11 
+    or n == 37
+    or n == 38
+    or n == 39
+    or n == 40 then
         return false
     end
 
@@ -13,7 +17,10 @@ function TileCollisions(n)
 end
 
 function TileTransparency(n)
-    if n == 0 then -- air (fully transparent)
+    if n == 0 
+    or n == 37 
+    or n == 38 
+    or n == 6 then -- air (fully transparent)
         return 0
     end
 
@@ -54,9 +61,22 @@ function TileTextures(n)
         {48}, -- 19 sponge
         {49}, -- 20 glass
     }
+    list[38] = {13} -- 18 yellow flower
+    list[39] = {12} -- 18 rose
     list[46] = {7} -- 18 leaves
 
     -- transforms the list into base 0 to accomodate for air blocks
     return list[n+1]
 end
 
+function TileModel(n)
+    -- flowers and mushrooms have different models
+    if n == 37
+    or n == 38
+    or n == 39
+    or n == 40 then
+        return 1
+    end
+
+    return 0
+end

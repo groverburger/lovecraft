@@ -24,7 +24,7 @@ function NewChunk(x,z)
     end
 
     -- set voxel id of the voxel in this chunk's coordinate space
-    chunk.setVoxel = function (self, x,y,z, value)
+    chunk.setVoxel = function (self, x,y,z, value,light)
         x = math.floor(x)
         y = math.floor(y)
         z = math.floor(z)
@@ -43,6 +43,18 @@ function NewChunk(x,z)
             self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value)..string.char(tempLight))
         end
     end
+
+    chunk.setVoxelData = function (self, x,y,z, value)
+        x = math.floor(x)
+        y = math.floor(y)
+        z = math.floor(z)
+        if x <= ChunkSize and x >= 1
+        and z <= ChunkSize and z >= 1
+        and y >= 1 and y <= WorldHeight then
+            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +2, string.char(value))
+        end
+    end
+
 
     -- update this chunk's model after voxels in it have been modified
     -- update only relevant chunkslices to x,y,z value given
@@ -95,9 +107,23 @@ function NewChunk(x,z)
             if request.chunkx == self.x and request.chunky == self.z then
                 for j=1, #request.blocks do
                     local block = request.blocks[j]
-                    if self:getVoxel(block.x,block.y,block.z) == 0 then
+                    if not TileCollisions(self:getVoxel(block.x,block.y,block.z)) then
                         self:setVoxel(block.x,block.y,block.z, block.value)
                     end
+                end
+            end
+        end
+    end
+
+    chunk.lightingGenerate = function (self)
+        for x=1, ChunkSize do
+            for z=1, ChunkSize do
+                local light = 15
+                local y = WorldHeight
+
+                while not TileCollisions(self:getVoxel(x,y,z)) do
+                    self:setVoxelData(x,y,z, light)
+                    y=y-1
                 end
             end
         end
@@ -144,6 +170,45 @@ function NewChunkSlice(x,y,z, parent)
                     if thisTransparency < 3 then
                         -- if not checking for tget == 0, then it will render the "faces" of airblocks 
                         -- on transparent block edges
+
+                        -- simple plant model (flowers, mushrooms)
+                        if TileModel(this) == 1 then
+                            local otx,oty = NumberToCoord(TileTextures(this)[1], 16,16)
+                            otx = otx + 16*thisLight
+                            local otx2,oty2 = otx+1,oty+1
+                            local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
+                            local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
+
+                            local diagLong = 0.7071*scale*0.5 + 0.5
+                            local diagShort = -0.7071*scale*0.5 + 0.5
+                            model[#model+1] = {x+diagShort, y, z+diagShort, tx2,ty2}
+                            model[#model+1] = {x+diagLong, y, z+diagLong, tx,ty2}
+                            model[#model+1] = {x+diagShort, y+scale, z+diagShort, tx2,ty}
+                            model[#model+1] = {x+diagLong, y, z+diagLong, tx,ty2}
+                            model[#model+1] = {x+diagLong, y+scale, z+diagLong, tx,ty}
+                            model[#model+1] = {x+diagShort, y+scale, z+diagShort, tx2,ty}
+                            -- mirror
+                            model[#model+1] = {x+diagLong, y, z+diagLong, tx2,ty2}
+                            model[#model+1] = {x+diagShort, y, z+diagShort, tx,ty2}
+                            model[#model+1] = {x+diagShort, y+scale, z+diagShort, tx,ty}
+                            model[#model+1] = {x+diagLong, y+scale, z+diagLong, tx2,ty}
+                            model[#model+1] = {x+diagLong, y, z+diagLong, tx2,ty2}
+                            model[#model+1] = {x+diagShort, y+scale, z+diagShort, tx,ty}
+
+                            model[#model+1] = {x+diagShort, y, z+diagLong, tx2,ty2}
+                            model[#model+1] = {x+diagLong, y, z+diagShort, tx,ty2}
+                            model[#model+1] = {x+diagShort, y+scale, z+diagLong, tx2,ty}
+                            model[#model+1] = {x+diagLong, y, z+diagShort, tx,ty2}
+                            model[#model+1] = {x+diagLong, y+scale, z+diagShort, tx,ty}
+                            model[#model+1] = {x+diagShort, y+scale, z+diagLong, tx2,ty}
+                            --mirror
+                            model[#model+1] = {x+diagLong, y, z+diagShort, tx2,ty2}
+                            model[#model+1] = {x+diagShort, y, z+diagLong, tx,ty2}
+                            model[#model+1] = {x+diagShort, y+scale, z+diagLong, tx,ty}
+                            model[#model+1] = {x+diagLong, y+scale, z+diagShort, tx2,ty}
+                            model[#model+1] = {x+diagLong, y, z+diagShort, tx2,ty2}
+                            model[#model+1] = {x+diagShort, y+scale, z+diagLong, tx,ty}
+                        end
 
                         -- top
                         local get = self.parent:getVoxel(i,j-1,k)

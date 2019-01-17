@@ -62,6 +62,7 @@ function engine.newModel(verts, texture, coords, color, format)
         m.mesh:setTexture(texture)
     end
     m.texture = texture
+    m.format = format
     m.verts = verts
     m.transform = TransposeMatrix(cpml.mat4.identity())
     m.color = color
@@ -72,7 +73,7 @@ function engine.newModel(verts, texture, coords, color, format)
 
     m.setVerts = function (self, verts)
         if #verts > 0 then
-            self.mesh = love.graphics.newMesh(format, verts, "triangles")
+            self.mesh = love.graphics.newMesh(self.format, verts, "triangles")
             self.mesh:setTexture(self.texture)
         end
         self.verts = verts

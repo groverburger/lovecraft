@@ -83,7 +83,10 @@ function DefaultGeneration(chunk, x,z)
                         else
                             grass = false
                             temp[yy] = string.char(2)
-                            if love.math.random() < love.math.noise(i/32,k/32)*0.02 and sunlight then
+                            if love.math.noise(xx/32,zz/32) > 0.9 and love.math.random() < 0.2 then
+                                temp[yy+2] = string.char(38)
+                            end
+                            if love.math.random() < love.math.noise(xx/64,zz/64)*0.02 and sunlight then
                                 genTree(i,j,k)
                                 temp[yy] = string.char(3)
                             end
@@ -188,7 +191,7 @@ function ClassicGeneration(chunk, x,z)
 
                 temp[yy+1] = string.char(12)
                 if sunlight then
-                    temp[yy+1] = string.char(15)
+                    --temp[yy+1] = string.char(15)
                 end
 
                 if j < floor then
