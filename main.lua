@@ -29,6 +29,30 @@ function love.load()
     GuiHotbarSelectQuad = love.graphics.newQuad(0,22, 24,22+24, GuiSprites:getDimensions())
     GuiCrosshair = love.graphics.newQuad(256-16,0, 256,16, GuiSprites:getDimensions())
 
+    CrosshairShader = love.graphics.newShader[[
+        uniform Image source;
+        uniform number xProportion;
+        uniform number yProportion;
+
+        vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords)
+        {
+            vec2 scaled_coords = vec2(0,0);
+            scaled_coords.x = (texture_coords.x-0.9375)*16;
+            scaled_coords.y = (texture_coords.y)*16;
+            vec4 sourcecolor = Texel(source, vec2(0.5 + (-0.5 +scaled_coords.x)*xProportion,0.5 + (0.5 -scaled_coords.y)*yProportion));
+
+            sourcecolor.r = 1-sourcecolor.r;
+            sourcecolor.g = 1-sourcecolor.g;
+            sourcecolor.b = 1-sourcecolor.b;
+
+            sourcecolor.a = 1;
+            vec4 crosshair = Texel(texture, texture_coords);
+            sourcecolor.a = crosshair.a;
+
+            return sourcecolor;
+        }
+    ]]
+
     -- make a separate canvas image for each of the tiles in the TileTexture
     TileCanvas = {}
     for i=1, 16 do
@@ -136,8 +160,8 @@ function GetChunk(x,y,z)
     local y = math.floor(y)
     local z = math.floor(z)
     local hashx,hashy = ChunkHash(math.floor(x/ChunkSize)+1), ChunkHash(math.floor(z/ChunkSize)+1)
-    local getChunk = nil 
-    if ChunkList[hashx] ~= nil then 
+    local getChunk = nil
+    if ChunkList[hashx] ~= nil then
         getChunk = ChunkList[hashx][hashy]
     end
 
@@ -228,9 +252,15 @@ function love.draw()
 
             -- draw crosshair
             love.graphics.setColor(1,1,1)
+            CrosshairShader:send("source", Scene.threeCanvas)
+            CrosshairShader:send("xProportion", 32/GraphicsWidth)
+            CrosshairShader:send("yProportion", 32/GraphicsHeight)
+            love.graphics.setShader(CrosshairShader)
             love.graphics.draw(GuiSprites, GuiCrosshair, InterfaceWidth/2 -16,InterfaceHeight/2 -16, 0, 2,2)
+            love.graphics.setShader()
 
             -- draw hotbar
+            love.graphics.setColor(1,1,1)
             love.graphics.draw(GuiSprites, GuiHotbarQuad, InterfaceWidth/2 - 182, InterfaceHeight-22*2, 0, 2,2)
             love.graphics.draw(GuiSprites, GuiHotbarSelectQuad, InterfaceWidth/2 - 182 + 40*(PlayerInventory.hotbarSelect-1) -2, InterfaceHeight-24 -22, 0, 2,2)
 
@@ -255,7 +285,7 @@ function love.wheelmoved(x,y)
 end
 
 function love.mousepressed(x,y, b)
-    -- forward mousepress events to all things in ThingList 
+    -- forward mousepress events to all things in ThingList
     for i=1, #ThingList do
         local thing = ThingList[i]
         thing:mousepressed(b)
