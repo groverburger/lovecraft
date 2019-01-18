@@ -30,6 +30,7 @@ function love.load()
     GuiHotbarSelectQuad = love.graphics.newQuad(0,22, 24,22+24, GuiSprites:getDimensions())
     GuiCrosshair = love.graphics.newQuad(256-16,0, 256,16, GuiSprites:getDimensions())
 
+    -- shader to change color of crosshair to contrast (hopefully) with what is being looked at
     CrosshairShader = love.graphics.newShader[[
         uniform Image source;
         uniform number xProportion;
@@ -114,26 +115,30 @@ function love.load()
     PlayerInventory.items[8] = 20
 
     -- generate the world, store in 2d hash table
+    ChunkHashTable = {}
     ChunkList = {}
     ChunkRequests = {}
+    LightingQueue = {}
     local worldSize = 6
     for i=worldSize/-2 +1, worldSize/2 do
         print(i)
-        ChunkList[ChunkHash(i)] = {}
+        ChunkHashTable[ChunkHash(i)] = {}
         for j=worldSize/-2 +1, worldSize/2 do
-            ChunkList[ChunkHash(i)][ChunkHash(j)] = CreateThing(NewChunk(i,j))
+            ChunkList[#ChunkList+1] = CreateThing(NewChunk(i,j))
+            ChunkHashTable[ChunkHash(i)][ChunkHash(j)] = ChunkList[#ChunkList]
         end
     end
     for i=worldSize/-2 +1, worldSize/2 do
         for j=worldSize/-2 +1, worldSize/2 do
-            ChunkList[ChunkHash(i)][ChunkHash(j)]:processRequests()
-            --ChunkList[ChunkHash(i)][ChunkHash(j)]:lightingGenerate()
+            ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:processRequests()
+            --ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:lightingGenerate()
         end
     end
+    LightingUpdate()
     for i=worldSize/-2 +1, worldSize/2 do
         print(i)
         for j=worldSize/-2 +1, worldSize/2 do
-            ChunkList[ChunkHash(i)][ChunkHash(j)]:initialize()
+            ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:initialize()
         end
     end
 end
@@ -162,13 +167,23 @@ function GetChunk(x,y,z)
     local z = math.floor(z)
     local hashx,hashy = ChunkHash(math.floor(x/ChunkSize)+1), ChunkHash(math.floor(z/ChunkSize)+1)
     local getChunk = nil
-    if ChunkList[hashx] ~= nil then
-        getChunk = ChunkList[hashx][hashy]
+    if ChunkHashTable[hashx] ~= nil then
+        getChunk = ChunkHashTable[hashx][hashy]
     end
 
     local mx,mz = x%ChunkSize +1, z%ChunkSize +1
 
     return getChunk, mx,y,mz, hashx,hashy
+end
+
+function GetChunkRaw(x,z)
+    local hashx,hashy = ChunkHash(x), ChunkHash(z)
+    local getChunk = nil
+    if ChunkHashTable[hashx] ~= nil then
+        getChunk = ChunkHashTable[hashx][hashy]
+    end
+
+    return getChunk
 end
 
 -- get voxel by looking at chunk at given position's local coordinate system
@@ -204,6 +219,19 @@ function SetVoxelData(x,y,z, value)
         return true
     end
     return false
+end
+
+function LightingUpdate()
+    local i=1
+    while i <= #LightingQueue do
+        LightingQueue[i]:query()
+        table.remove(LightingQueue, i)
+    end
+end
+
+function UpdateChangedChunks()
+    for i=1, #ChunkList do
+    end
 end
 
 function love.update(dt)
@@ -330,6 +358,7 @@ function love.mousepressed(x,y, b)
     local chunk = pos.chunk
     if chunk ~= nil and ThePlayer.cursorpos.chunk ~= nil and ThePlayer.cursorHit then
         chunk:setVoxel(cx,cy,cz, value)
+        LightingUpdate()
         chunk:updateModel(cx,cy,cz)
         --print("---")
         --print(cx,cy,cz)

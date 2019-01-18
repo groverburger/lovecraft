@@ -6,7 +6,9 @@ function NewChunk(x,z)
     local chunk = NewThing(x,0,z)
     chunk.voxels = {}
     chunk.slices = {}
-    chunk.lightingQueue = {}
+
+    -- store a list of voxels to be updated on next modelUpdate
+    chunk.changes = {}
 
     DefaultGeneration(chunk, x,z)
 
@@ -33,12 +35,15 @@ function NewChunk(x,z)
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
             local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
-            if value == 0 then
-                self.lightingQueue[#self.lightingQueue+1] = NewAddition(gx,gy,gz, 15)
-            elseif TileTransparency(value) > 0 then
-                self.lightingQueue[#self.lightingQueue+1] = NewSubtraction(gx,gy-1,gz, 12)
+            local transp = TileTransparency(value)
+            if transp == 0 or transp == 2 then
+                LightingQueue[#LightingQueue+1] = NewAddition(gx,gy,gz, 15)
+            else
+                LightingQueue[#LightingQueue+1] = NewSubtraction(gx,gy-1,gz, 12)
             end
             self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value)..string.char(12))
+
+            self.changes[#self.changes+1] = {x,y,z}
         end
     end
 
@@ -50,54 +55,74 @@ function NewChunk(x,z)
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
             self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +2, string.char(value))
+
+            self.changes[#self.changes+1] = {x,y,z}
         end
     end
 
 
-    -- update this chunk's model after voxels in it have been modified
-    -- update only relevant chunkslices to x,y,z value given
-    -- mustStop is given as a way to prevent infinite recursion
-    chunk.updateModel = function (self, x,y,z, mustStop)
-        self:lightingUpdate()
+    -- update this chunk's model slices based on what changes it has stored
+    chunk.updateModel = function (self)
+        local sliceUpdates = {}
 
-        if mustStop == nil then
-            mustStop = false
-        end
-        local sy = (y)%SliceHeight
-        local xx,zz = (self.x-1)*ChunkSize + x-1, (self.z-1)*ChunkSize + z-1
-        local i = math.floor((y-1)/SliceHeight) +1
-
-        if self.slices[i] ~= nil then
-            self.slices[i]:updateModel()
+        for i=1, WorldHeight/SliceHeight do
+            sliceUpdates[i] = {false, false, false, false, false}
         end
 
-        -- update vertical neighbors if relevant
-        if true and self.slices[i+1] ~= nil then
-            self.slices[i+1]:updateModel()
+        -- find which slices need to be updated
+        for i=1, #self.changes do
+            local index = math.floor((self.changes[i][2]-1)/SliceHeight) +1
+            sliceUpdates[index][1] = true
+
+            print(self.changes[i][1], self.changes[i][2], self.changes[i][3])
+            -- neg x
+            if self.changes[1] == 1 then
+                sliceUpdates[index][2] = true
+            end
+            -- pos x
+            if self.changes[1] == ChunkSize then
+                sliceUpdates[index][3] = true
+            end
+            -- neg z
+            if self.changes[3] == 1 then
+                sliceUpdates[index][4] = true
+            end
+            -- pos z
+            if self.changes[3] == ChunkSize then
+                sliceUpdates[index][5] = true
+            end
         end
-        if (true or sy == 1) and self.slices[i-1] ~= nil then
-            self.slices[i-1]:updateModel()
+
+        for i=1, WorldHeight/SliceHeight do
+            if sliceUpdates[i][1] then
+                self.slices[i]:updateModel()
+
+                if sliceUpdates[i][2] then
+                    GetChunkRaw(self.x-1,self.z).slices[i]:updateModel()
+                end
+                if sliceUpdates[i][3] then
+                    GetChunkRaw(self.x+1,self.z).slices[i]:updateModel()
+                end
+                if sliceUpdates[i][4] or sliceUpdates[i][5] then
+                    GetChunkRaw(self.x,self.z-1).slices[i]:updateModel()
+                end
+                if sliceUpdates[i][4] or sliceUpdates[i][5] then
+                    GetChunkRaw(self.x,self.z+1).slices[i]:updateModel()
+                end
+
+                -- update vertical neighbors if relevant
+                if self.slices[i+1] ~= nil then
+                    self.slices[i+1]:updateModel()
+                end
+                if self.slices[i-1] ~= nil then
+                    self.slices[i-1]:updateModel()
+                end
+            end
         end
 
         -- update lateral chunk neighbors if relevant
-        if not mustStop then
-            local chunkGet = GetChunk(xx-1,y,zz)
-            if chunkGet ~= self and chunkGet ~= nil then
-                chunkGet:updateModel(ChunkSize,y,z, true)
-            end
-            local chunkGet = GetChunk(xx+1,y,zz)
-            if chunkGet ~= self and chunkGet ~= nil then
-                chunkGet:updateModel(1,y,z, true)
-            end
-            local chunkGet = GetChunk(xx,y,zz-1)
-            if chunkGet ~= self and chunkGet ~= nil then
-                chunkGet:updateModel(x,y,ChunkSize, true)
-            end
-            local chunkGet = GetChunk(xx,y,zz+1)
-            if chunkGet ~= self and chunkGet ~= nil then
-                chunkGet:updateModel(x,y,1, true)
-            end
-        end
+
+        self.changes = {}
     end
 
     -- process all requested blocks upon creation of chunk
@@ -115,18 +140,7 @@ function NewChunk(x,z)
         end
     end
 
-    chunk.lightingUpdate = function (self)
-        local i=1
-        while i <= #self.lightingQueue do
-            self.lightingQueue[i]:query()
-            table.remove(self.lightingQueue, i)
-        end
-
-        self.lightingQueue = {}
-    end
-
     chunk.initialize = function (self)
-        self:lightingUpdate()
         for i=1, WorldHeight/SliceHeight do
             self.slices[i] = CreateThing(NewChunkSlice(self.x,self.y + (i-1)*SliceHeight,self.z, self))
         end
