@@ -6,6 +6,7 @@ function NewChunk(x,z)
     local chunk = NewThing(x,0,z)
     chunk.voxels = {}
     chunk.slices = {}
+    chunk.lightingQueue = {}
 
     DefaultGeneration(chunk, x,z)
 
@@ -31,16 +32,13 @@ function NewChunk(x,z)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
-            local temp = 0
-            local tempLight = 15
+            local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
             if value == 0 then
-                temp, tempLight = self:getVoxel(x,y+1,z)
-
-                if temp ~= 0 then
-                    tempLight = 12
-                end
+                self.lightingQueue[#self.lightingQueue+1] = NewAddition(gx,gy,gz, 15)
+            elseif TileTransparency(value) > 0 then
+                self.lightingQueue[#self.lightingQueue+1] = NewSubtraction(gx,gy-1,gz, 12)
             end
-            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value)..string.char(tempLight))
+            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value)..string.char(12))
         end
     end
 
@@ -60,6 +58,8 @@ function NewChunk(x,z)
     -- update only relevant chunkslices to x,y,z value given
     -- mustStop is given as a way to prevent infinite recursion
     chunk.updateModel = function (self, x,y,z, mustStop)
+        self:lightingUpdate()
+
         if mustStop == nil then
             mustStop = false
         end
@@ -115,21 +115,18 @@ function NewChunk(x,z)
         end
     end
 
-    chunk.lightingGenerate = function (self)
-        for x=1, ChunkSize do
-            for z=1, ChunkSize do
-                local light = 15
-                local y = WorldHeight
-
-                while not TileCollisions(self:getVoxel(x,y,z)) do
-                    self:setVoxelData(x,y,z, light)
-                    y=y-1
-                end
-            end
+    chunk.lightingUpdate = function (self)
+        local i=1
+        while i <= #self.lightingQueue do
+            self.lightingQueue[i]:query()
+            table.remove(self.lightingQueue, i)
         end
+
+        self.lightingQueue = {}
     end
 
     chunk.initialize = function (self)
+        self:lightingUpdate()
         for i=1, WorldHeight/SliceHeight do
             self.slices[i] = CreateThing(NewChunkSlice(self.x,self.y + (i-1)*SliceHeight,self.z, self))
         end
@@ -168,7 +165,7 @@ function NewChunkSlice(x,y,z, parent)
                     local x,y,z = (self.x-1)*ChunkSize + i-1, 1*j*scale, (self.z-1)*ChunkSize + k-1
 
                     if thisTransparency < 3 then
-                        -- if not checking for tget == 0, then it will render the "faces" of airblocks 
+                        -- if not checking for tget == 0, then it will render the "faces" of airblocks
                         -- on transparent block edges
 
                         -- simple plant model (flowers, mushrooms)

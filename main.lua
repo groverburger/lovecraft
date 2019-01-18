@@ -4,6 +4,7 @@ require "tiledata"
 require "things"
 require "player"
 require "generator"
+require "lighting"
 require "chunk"
 
 function love.load()
@@ -178,6 +179,31 @@ function GetVoxel(x,y,z)
         v = chunk:getVoxel(cx,cy,cz)
     end
     return v
+end
+function GetVoxelData(x,y,z)
+    local chunk, cx,cy,cz = GetChunk(x,y,z)
+    local v = 0
+    local d = 0
+    if chunk ~= nil then
+        v, d = chunk:getVoxel(cx,cy,cz)
+    end
+    return d
+end
+function SetVoxel(x,y,z, value)
+    local chunk, cx,cy,cz = GetChunk(x,y,z)
+    if chunk ~= nil then
+        chunk:setVoxel(cx,cy,cz, value)
+        return true
+    end
+    return false
+end
+function SetVoxelData(x,y,z, value)
+    local chunk, cx,cy,cz = GetChunk(x,y,z)
+    if chunk ~= nil then
+        chunk:setVoxelData(cx,cy,cz, value)
+        return true
+    end
+    return false
 end
 
 function love.update(dt)
