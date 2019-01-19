@@ -1,26 +1,18 @@
 function LateralProp (x,y,z, value)
     if GetVoxelData(x+1,y,z) < value then
-        if GetChunk(x+1,y,z) ~= nil then
-            LightingQueueAdd(NewAddition(x+1,y,z, value-1))
-        end
+        LightingQueueAdd(NewAddition(x+1,y,z, value-1))
     end
 
     if GetVoxelData(x-1,y,z) < value then
-        if GetChunk(x-1,y,z) ~= nil then
-            LightingQueueAdd(NewAddition(x-1,y,z, value-1))
-        end
+        LightingQueueAdd(NewAddition(x-1,y,z, value-1))
     end
 
     if GetVoxelData(x,y,z+1) < value then
-        if GetChunk(x,y,z+1) ~= nil then
-            LightingQueueAdd(NewAddition(x,y,z+1, value-1))
-        end
+        LightingQueueAdd(NewAddition(x,y,z+1, value-1))
     end
 
     if GetVoxelData(x,y,z-1) < value then
-        if GetChunk(x,y,z-1) ~= nil then
-            LightingQueueAdd(NewAddition(x,y,z-1, value-1))
-        end
+        LightingQueueAdd(NewAddition(x,y,z-1, value-1))
     end
 end
 
