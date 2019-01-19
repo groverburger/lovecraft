@@ -72,24 +72,37 @@ function NewChunk(x,z)
         -- find which slices need to be updated
         for i=1, #self.changes do
             local index = math.floor((self.changes[i][2]-1)/SliceHeight) +1
-            sliceUpdates[index][1] = true
+            if sliceUpdates[index] ~= nil then
+                sliceUpdates[index][1] = true
 
-            print(self.changes[i][1], self.changes[i][2], self.changes[i][3])
-            -- neg x
-            if self.changes[1] == 1 then
-                sliceUpdates[index][2] = true
-            end
-            -- pos x
-            if self.changes[1] == ChunkSize then
-                sliceUpdates[index][3] = true
-            end
-            -- neg z
-            if self.changes[3] == 1 then
-                sliceUpdates[index][4] = true
-            end
-            -- pos z
-            if self.changes[3] == ChunkSize then
-                sliceUpdates[index][5] = true
+                if math.floor((self.changes[i][2])/SliceHeight) +1 > index and sliceUpdates[index+1] ~= nil then
+                    sliceUpdates[math.min(index+1, #sliceUpdates)][1] = true
+                end
+                if math.floor((self.changes[i][2]-2)/SliceHeight) +1 < index and sliceUpdates[index-1] ~= nil then
+                    sliceUpdates[math.max(index-1, 1)][1] = true
+                end
+
+                print(self.changes[i][1], self.changes[i][2], self.changes[i][3])
+                -- neg x
+                if self.changes[i][1] == 1 then
+                    sliceUpdates[index][2] = true
+                    print("neg x")
+                end
+                -- pos x
+                if self.changes[i][1] == ChunkSize then
+                    sliceUpdates[index][3] = true
+                    print("pos x")
+                end
+                -- neg z
+                if self.changes[i][3] == 1 then
+                    sliceUpdates[index][4] = true
+                    print("neg z")
+                end
+                -- pos z
+                if self.changes[i][3] == ChunkSize then
+                    sliceUpdates[index][5] = true
+                    print("pos z")
+                end
             end
         end
 
@@ -98,24 +111,28 @@ function NewChunk(x,z)
                 self.slices[i]:updateModel()
 
                 if sliceUpdates[i][2] then
-                    GetChunkRaw(self.x-1,self.z).slices[i]:updateModel()
+                    local chunk = GetChunkRaw(self.x-1,self.z)
+                    if chunk ~= nil then
+                        chunk.slices[i]:updateModel()
+                    end
                 end
                 if sliceUpdates[i][3] then
-                    GetChunkRaw(self.x+1,self.z).slices[i]:updateModel()
+                    local chunk = GetChunkRaw(self.x+1,self.z)
+                    if chunk ~= nil then
+                        chunk.slices[i]:updateModel()
+                    end
                 end
                 if sliceUpdates[i][4] or sliceUpdates[i][5] then
-                    GetChunkRaw(self.x,self.z-1).slices[i]:updateModel()
+                    local chunk = GetChunkRaw(self.x,self.z-1)
+                    if chunk ~= nil then
+                        chunk.slices[i]:updateModel()
+                    end
                 end
                 if sliceUpdates[i][4] or sliceUpdates[i][5] then
-                    GetChunkRaw(self.x,self.z+1).slices[i]:updateModel()
-                end
-
-                -- update vertical neighbors if relevant
-                if self.slices[i+1] ~= nil then
-                    self.slices[i+1]:updateModel()
-                end
-                if self.slices[i-1] ~= nil then
-                    self.slices[i-1]:updateModel()
+                    local chunk = GetChunkRaw(self.x,self.z+1)
+                    if chunk ~= nil then
+                        chunk.slices[i]:updateModel()
+                    end
                 end
             end
         end
@@ -142,7 +159,7 @@ function NewChunk(x,z)
 
     chunk.initialize = function (self)
         for i=1, WorldHeight/SliceHeight do
-            self.slices[i] = CreateThing(NewChunkSlice(self.x,self.y + (i-1)*SliceHeight,self.z, self))
+            self.slices[i] = CreateThing(NewChunkSlice(self.x,self.y + (i-1)*SliceHeight+1,self.z, self))
         end
     end
 
@@ -171,7 +188,7 @@ function NewChunkSlice(x,y,z, parent)
         -- if air block, see if any solid neighbors
         -- then place faces down accordingly with proper texture and lighting value
         for i=1, ChunkSize do
-            for j=math.max(self.y, 1), self.y+SliceHeight do
+            for j=self.y, self.y+SliceHeight-1 do
                 for k=1, ChunkSize do
                     local this, thisLight = self.parent:getVoxel(i,j,k)
                     local thisTransparency = TileTransparency(this)
