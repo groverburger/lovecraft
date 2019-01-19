@@ -231,6 +231,9 @@ end
 
 function UpdateChangedChunks()
     for i=1, #ChunkList do
+        if #ChunkList[i].changes > 0 then
+            ChunkList[i]:updateModel()
+        end
     end
 end
 
@@ -359,7 +362,8 @@ function love.mousepressed(x,y, b)
     if chunk ~= nil and ThePlayer.cursorpos.chunk ~= nil and ThePlayer.cursorHit then
         chunk:setVoxel(cx,cy,cz, value)
         LightingUpdate()
-        chunk:updateModel(cx,cy,cz)
+        UpdateChangedChunks()
+        --chunk:updateModel(cx,cy,cz)
         --print("---")
         --print(cx,cy,cz)
         --print(cx%ChunkSize,cy%SliceHeight,cz%ChunkSize)

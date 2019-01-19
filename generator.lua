@@ -46,7 +46,7 @@ function DefaultGeneration(chunk, x,z)
         end
     end
 
-    -- iterate through chunk 
+    -- iterate through chunk
     -- voxel data is stored in strings in a 2d array to simulate a 3d array of bytes
     for i=1, ChunkSize do
         chunk.voxels[i] = {}
@@ -72,7 +72,7 @@ function DefaultGeneration(chunk, x,z)
                 else
                     temp[yy] = string.char(0)
 
-                    if ChunkNoise(xx,j,zz) > (j-floor)/(ceiling-floor) then
+                    if ChunkNoise(xx,j,zz) > (j-floor)/(ceiling-floor)*(Noise2D(xx,zz, 128,5)*0.75 +0.75) then
                         if not grass then
                             if dirt > 0 then
                                 dirt = dirt - 1
@@ -157,7 +157,7 @@ function ClassicGeneration(chunk, x,z)
     local noise2 = NewCombinedNoise(NewOctaveNoise(8, 6,7), NewOctaveNoise(8, 8,9))
     local noise3 = NewOctaveNoise(6, 10,11)
 
-    -- iterate through chunk 
+    -- iterate through chunk
     -- voxel data is stored in strings in a 2d array to simulate a 3d array of bytes
     for i=1, ChunkSize do
         chunk.voxels[i] = {}
@@ -231,9 +231,14 @@ end
 
 -- noise function used in chunk generation
 function ChunkNoise(x,y,z)
-    local freq = 16
-    local yfreq = 12
-    return love.math.noise(x/freq + Salt[1]*100000,y/yfreq + Salt[2]*100000,z/freq + Salt[3]*100000)
+    return Noise(x,y,z, 16,12, 1)
+end
+
+function Noise(x,y,z, freq,yfreq, si)
+    return love.math.noise(x/freq + Salt[si]*100000,y/yfreq + Salt[si+1]*100000,z/freq + Salt[si+2]*100000)
+end
+function Noise2D(x,z, freq,si)
+    return love.math.noise(x/freq + Salt[si]*100000,z/freq + Salt[si+2]*100000)
 end
 
 function NewOctaveNoise(octaves, seed1,seed2)

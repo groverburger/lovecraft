@@ -12,6 +12,28 @@ function NewChunk(x,z)
 
     DefaultGeneration(chunk, x,z)
 
+    -- process all requested blocks upon creation of chunk
+    chunk.processRequests = function (self)
+        for i=1, #ChunkRequests do
+            local request = ChunkRequests[i]
+            if request.chunkx == self.x and request.chunky == self.z then
+                for j=1, #request.blocks do
+                    local block = request.blocks[j]
+                    if not TileCollisions(self:getVoxel(block.x,block.y,block.z)) then
+                        self:setVoxel(block.x,block.y,block.z, block.value)
+                    end
+                end
+            end
+        end
+    end
+
+    chunk.initialize = function (self)
+        for i=1, WorldHeight/SliceHeight do
+            self.slices[i] = CreateThing(NewChunkSlice(self.x,self.y + (i-1)*SliceHeight+1,self.z, self))
+        end
+        self.changes = {}
+    end
+
     -- get voxel id of the voxel in this chunk's coordinate space
     chunk.getVoxel = function (self, x,y,z)
         x = math.floor(x)
@@ -106,6 +128,7 @@ function NewChunk(x,z)
             end
         end
 
+        -- update slices that were flagged in previous step
         for i=1, WorldHeight/SliceHeight do
             if sliceUpdates[i][1] then
                 self.slices[i]:updateModel()
@@ -137,30 +160,7 @@ function NewChunk(x,z)
             end
         end
 
-        -- update lateral chunk neighbors if relevant
-
         self.changes = {}
-    end
-
-    -- process all requested blocks upon creation of chunk
-    chunk.processRequests = function (self)
-        for i=1, #ChunkRequests do
-            local request = ChunkRequests[i]
-            if request.chunkx == self.x and request.chunky == self.z then
-                for j=1, #request.blocks do
-                    local block = request.blocks[j]
-                    if not TileCollisions(self:getVoxel(block.x,block.y,block.z)) then
-                        self:setVoxel(block.x,block.y,block.z, block.value)
-                    end
-                end
-            end
-        end
-    end
-
-    chunk.initialize = function (self)
-        for i=1, WorldHeight/SliceHeight do
-            self.slices[i] = CreateThing(NewChunkSlice(self.x,self.y + (i-1)*SliceHeight+1,self.z, self))
-        end
     end
 
     return chunk
