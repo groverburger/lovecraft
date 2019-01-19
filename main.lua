@@ -221,6 +221,10 @@ function SetVoxelData(x,y,z, value)
     return false
 end
 
+function LightingQueueAdd(lthing)
+    LightingQueue[#LightingQueue+1] = lthing
+    return lthing
+end
 function LightingUpdate()
     local i=1
     while i <= #LightingQueue do

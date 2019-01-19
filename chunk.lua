@@ -12,6 +12,14 @@ function NewChunk(x,z)
 
     DefaultGeneration(chunk, x,z)
 
+    for i=1, ChunkSize do
+        for j=1, ChunkSize do
+            local gx,gz = (x-1)*ChunkSize + i-1, (z-1)*ChunkSize + j-1
+            print(gx,gz)
+            --LightingQueueAdd(NewSunlightAddition(gx,100,gz, 15))
+        end
+    end
+
     -- process all requested blocks upon creation of chunk
     chunk.processRequests = function (self)
         for i=1, #ChunkRequests do
@@ -59,9 +67,9 @@ function NewChunk(x,z)
             local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
             local transp = TileTransparency(value)
             if transp == 0 or transp == 2 then
-                LightingQueue[#LightingQueue+1] = NewAddition(gx,gy,gz, 15)
+                LightingQueueAdd(NewAddition(gx,gy,gz, 15))
             else
-                LightingQueue[#LightingQueue+1] = NewSubtraction(gx,gy-1,gz, 12)
+                LightingQueueAdd(NewSubtraction(gx,gy-1,gz, 12))
             end
             self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value)..string.char(12))
 

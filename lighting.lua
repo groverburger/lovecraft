@@ -13,7 +13,28 @@ function NewAddition(x,y,z, value)
             SetVoxelData(self.x,self.y,self.z, self.value)
 
             local chunk = GetChunk(self.x,self.y-1,self.z)
-            LightingQueue[#LightingQueue+1] = NewAddition(self.x,self.y-1,self.z, self.value)
+            LightingQueueAdd(NewAddition(self.x,self.y-1,self.z, self.value))
+        end
+    end
+
+    return t
+end
+
+function NewSunlightAddition(x,y,z, value)
+    local t = {}
+    t.x = x
+    t.y = y
+    t.z = z
+    t.value = value
+
+    t.query = function (self)
+        local transp = TileTransparency(GetVoxel(self.x,self.y,self.z))
+        if (transp == 0 or transp == 2)
+        and GetVoxelData(self.x,self.y,self.z) < self.value then
+            SetVoxelData(self.x,self.y,self.z, self.value)
+
+            local chunk = GetChunk(self.x,self.y-1,self.z)
+            LightingQueueAdd(NewAddition(self.x,self.y-1,self.z, self.value))
         end
     end
 
@@ -35,7 +56,7 @@ function NewSubtraction(x,y,z, value)
             SetVoxelData(self.x,self.y,self.z, self.value)
 
             local chunk = GetChunk(self.x,self.y-1,self.z)
-            LightingQueue[#LightingQueue+1] = NewSubtraction(self.x,self.y-1,self.z, self.value)
+            LightingQueueAdd(NewSubtraction(self.x,self.y-1,self.z, self.value))
         end
     end
 
