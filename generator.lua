@@ -61,7 +61,7 @@ function DefaultGeneration(chunk, x,z)
                 local zz = (z-1)*ChunkSize + k
                 local yy = (j-1)*2 +1
 
-                temp[yy+1] = string.char(12)
+                temp[yy+1] = string.char(0)
                 if sunlight then
                     temp[yy+1] = string.char(15)
                 end
@@ -90,6 +90,10 @@ function DefaultGeneration(chunk, x,z)
                                 genTree(i,j,k)
                                 temp[yy] = string.char(3)
                             end
+                        end
+
+                        if sunlight then
+                            chunk.heightMap[i][k] = j
                         end
                         sunlight = false
                     else

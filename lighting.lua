@@ -1,3 +1,29 @@
+function LateralProp (x,y,z, value)
+    if GetVoxelData(x+1,y,z) < value then
+        if GetChunk(x+1,y,z) ~= nil then
+            LightingQueueAdd(NewAddition(x+1,y,z, value-1))
+        end
+    end
+
+    if GetVoxelData(x-1,y,z) < value then
+        if GetChunk(x-1,y,z) ~= nil then
+            LightingQueueAdd(NewAddition(x-1,y,z, value-1))
+        end
+    end
+
+    if GetVoxelData(x,y,z+1) < value then
+        if GetChunk(x,y,z+1) ~= nil then
+            LightingQueueAdd(NewAddition(x,y,z+1, value-1))
+        end
+    end
+
+    if GetVoxelData(x,y,z-1) < value then
+        if GetChunk(x,y,z-1) ~= nil then
+            LightingQueueAdd(NewAddition(x,y,z-1, value-1))
+        end
+    end
+end
+
 function NewAddition(x,y,z, value)
     local t = {}
     t.x = x
@@ -7,13 +33,15 @@ function NewAddition(x,y,z, value)
 
     t.query = function (self)
         local transp = TileTransparency(GetVoxel(self.x,self.y,self.z))
-        if (transp == 0 or transp == 2)
-        and GetVoxelData(self.x,self.y,self.z) < self.value
-        and GetVoxelData(self.x,self.y+1,self.z) >= self.value then
+        if self.value >= 0
+        and (transp == 0 or transp == 2)
+        and GetChunk(self.x,self.y,self.z) ~= nil
+        and GetVoxelData(self.x,self.y,self.z) < self.value then
+            print(self.x,self.y,self.z)
             SetVoxelData(self.x,self.y,self.z, self.value)
-
-            local chunk = GetChunk(self.x,self.y-1,self.z)
             LightingQueueAdd(NewAddition(self.x,self.y-1,self.z, self.value))
+
+            LateralProp(self.x,self.y,self.z, self.value)
         end
     end
 
@@ -30,11 +58,13 @@ function NewSunlightAddition(x,y,z, value)
     t.query = function (self)
         local transp = TileTransparency(GetVoxel(self.x,self.y,self.z))
         if (transp == 0 or transp == 2)
-        and GetVoxelData(self.x,self.y,self.z) < self.value then
+        and GetChunk(self.x,self.y,self.z) ~= nil
+        and GetVoxelData(self.x,self.y,self.z) <= self.value then
+            --print(self.x,self.y,self.z)
             SetVoxelData(self.x,self.y,self.z, self.value)
+            LightingQueueAdd(NewSunlightAddition(self.x,self.y-1,self.z, self.value))
 
-            local chunk = GetChunk(self.x,self.y-1,self.z)
-            LightingQueueAdd(NewAddition(self.x,self.y-1,self.z, self.value))
+            LateralProp(self.x,self.y,self.z, self.value)
         end
     end
 

@@ -6,17 +6,38 @@ function NewChunk(x,z)
     local chunk = NewThing(x,0,z)
     chunk.voxels = {}
     chunk.slices = {}
+    chunk.heightMap = {}
 
     -- store a list of voxels to be updated on next modelUpdate
     chunk.changes = {}
 
+    for i=1, ChunkSize do
+        chunk.heightMap[i] = {}
+    end
+
     DefaultGeneration(chunk, x,z)
 
-    for i=1, ChunkSize do
-        for j=1, ChunkSize do
-            local gx,gz = (x-1)*ChunkSize + i-1, (z-1)*ChunkSize + j-1
-            print(gx,gz)
-            --LightingQueueAdd(NewSunlightAddition(gx,100,gz, 15))
+    chunk.sunlight = function (self)
+        for i=1, ChunkSize do
+            for j=1, ChunkSize do
+                local gx,gz = (x-1)*ChunkSize + i-1, (z-1)*ChunkSize + j-1
+                local this = self.heightMap[i][j]
+                print(gx,gz)
+
+                if i == 1 or this > self.heightMap[i-1][j] then
+                    LightingQueueAdd(NewSunlightAddition(gx-1,this,gz, 15))
+                end
+                if j == 1 or this > self.heightMap[i][j-1] then
+                    LightingQueueAdd(NewSunlightAddition(gx,this,gz-1, 15))
+                end
+                if i == ChunkSize or this > self.heightMap[i+1][j] then
+                    print('happen')
+                    LightingQueueAdd(NewSunlightAddition(gx+1,this,gz, 15))
+                end
+                if j == ChunkSize or this > self.heightMap[i][j+1] then
+                    LightingQueueAdd(NewSunlightAddition(gx,this,gz+1, 15))
+                end
+            end
         end
     end
 
