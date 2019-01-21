@@ -1,21 +1,3 @@
-function LateralProp (x,y,z, value)
-    if GetVoxelData(x+1,y,z) < value then
-        LightingQueueAdd(NewAddition(x+1,y,z, value-1))
-    end
-
-    if GetVoxelData(x-1,y,z) < value then
-        LightingQueueAdd(NewAddition(x-1,y,z, value-1))
-    end
-
-    if GetVoxelData(x,y,z+1) < value then
-        LightingQueueAdd(NewAddition(x,y,z+1, value-1))
-    end
-
-    if GetVoxelData(x,y,z-1) < value then
-        LightingQueueAdd(NewAddition(x,y,z-1, value-1))
-    end
-end
-
 function NewAddition(x,y,z, value)
     local t = {}
     t.x = x
@@ -29,11 +11,14 @@ function NewAddition(x,y,z, value)
         and (transp == 0 or transp == 2)
         and GetChunk(self.x,self.y,self.z) ~= nil
         and GetVoxelData(self.x,self.y,self.z) < self.value then
-            print(self.x,self.y,self.z)
+            --print(self.x,self.y,self.z)
             SetVoxelData(self.x,self.y,self.z, self.value)
-            LightingQueueAdd(NewAddition(self.x,self.y-1,self.z, self.value))
-
-            LateralProp(self.x,self.y,self.z, self.value)
+            LightingQueueAdd(NewAddition(self.x,self.y-1,self.z, self.value-1))
+            LightingQueueAdd(NewAddition(self.x,self.y+1,self.z, self.value-1))
+            LightingQueueAdd(NewAddition(self.x+1,self.y,self.z, self.value-1))
+            LightingQueueAdd(NewAddition(self.x-1,self.y,self.z, self.value-1))
+            LightingQueueAdd(NewAddition(self.x,self.y,self.z+1, self.value-1))
+            LightingQueueAdd(NewAddition(self.x,self.y,self.z-1, self.value-1))
         end
     end
 
@@ -56,7 +41,10 @@ function NewSunlightAddition(x,y,z, value)
             SetVoxelData(self.x,self.y,self.z, self.value)
             LightingQueueAdd(NewSunlightAddition(self.x,self.y-1,self.z, self.value))
 
-            LateralProp(self.x,self.y,self.z, self.value)
+            LightingQueueAdd(NewAddition(self.x+1,self.y,self.z, self.value-1))
+            LightingQueueAdd(NewAddition(self.x-1,self.y,self.z, self.value-1))
+            LightingQueueAdd(NewAddition(self.x,self.y,self.z+1, self.value-1))
+            LightingQueueAdd(NewAddition(self.x,self.y,self.z-1, self.value-1))
         end
     end
 

@@ -31,7 +31,6 @@ function NewChunk(x,z)
                     LightingQueueAdd(NewSunlightAddition(gx,this,gz-1, 15))
                 end
                 if i == ChunkSize or this > self.heightMap[i+1][j] then
-                    print('happen')
                     LightingQueueAdd(NewSunlightAddition(gx+1,this,gz, 15))
                 end
                 if j == ChunkSize or this > self.heightMap[i][j+1] then
@@ -49,7 +48,7 @@ function NewChunk(x,z)
                 for j=1, #request.blocks do
                     local block = request.blocks[j]
                     if not TileCollisions(self:getVoxel(block.x,block.y,block.z)) then
-                        self:setVoxel(block.x,block.y,block.z, block.value)
+                        self:setVoxelRaw(block.x,block.y,block.z, block.value)
                     end
                 end
             end
@@ -75,6 +74,17 @@ function NewChunk(x,z)
         end
 
         return 0, 0
+    end
+
+    chunk.setVoxelRaw = function (self, x,y,z, value,light)
+        if x <= ChunkSize and x >= 1
+        and z <= ChunkSize and z >= 1
+        and y >= 1 and y <= WorldHeight then
+            local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
+            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value))
+
+            self.changes[#self.changes+1] = {x,y,z}
+        end
     end
 
     -- set voxel id of the voxel in this chunk's coordinate space
