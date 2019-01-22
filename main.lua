@@ -15,8 +15,12 @@ function love.load()
     love.mouse.setRelativeMode(true)
     love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setLineStyle("rough")
-    love.window.setMode(GraphicsWidth,GraphicsHeight, {vsync=true})
+    love.window.setMode(GraphicsWidth,GraphicsHeight, {vsync = -1})
     love.window.setTitle("lövecraft")
+
+    -- for capping game logic / fps at 60 manually
+    LogicRate = 60
+    LogicAccumulator = 0
 
     -- create scene object from SS3D engine
     Scene = Engine.newScene(GraphicsWidth, GraphicsHeight)
@@ -253,19 +257,25 @@ function UpdateChangedChunks()
 end
 
 function love.update(dt)
-    -- update 3d scene
-    Scene:update()
+    LogicAccumulator = LogicAccumulator+dt
 
-    -- update all things in ThingList update queue
-    local i = 1
-    while i<=#ThingList do
-        local thing = ThingList[i]
-        if thing:update(dt) then
-            i=i+1
-        else
-            table.remove(ThingList, i)
-            thing:destroy()
-            thing:destroyModel()
+    if LogicAccumulator >= 1/LogicRate then
+        LogicAccumulator = LogicAccumulator - 1/LogicRate
+
+        -- update 3d scene
+        Scene:update()
+
+        -- update all things in ThingList update queue
+        local i = 1
+        while i<=#ThingList do
+            local thing = ThingList[i]
+            if thing:update(dt) then
+                i=i+1
+            else
+                table.remove(ThingList, i)
+                thing:destroy()
+                thing:destroyModel()
+            end
         end
     end
 end
