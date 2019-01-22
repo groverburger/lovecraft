@@ -386,32 +386,11 @@ function love.keypressed(k)
     if k == "escape" then
         love.event.push("quit")
     end
-    if k == "1" then
-        PlayerInventory.hotbarSelect = 1
-    end
-    if k == "2" then
-        PlayerInventory.hotbarSelect = 2
-    end
-    if k == "3" then
-        PlayerInventory.hotbarSelect = 3
-    end
-    if k == "4" then
-        PlayerInventory.hotbarSelect = 4
-    end
-    if k == "5" then
-        PlayerInventory.hotbarSelect = 5
-    end
-    if k == "6" then
-        PlayerInventory.hotbarSelect = 6
-    end
-    if k == "7" then
-        PlayerInventory.hotbarSelect = 7
-    end
-    if k == "8" then
-        PlayerInventory.hotbarSelect = 8
-    end
-    if k == "9" then
-        PlayerInventory.hotbarSelect = 9
+
+    -- simplified hotbar number press code, thanks nico-abram!
+    local numberPress = tonumber(k)
+    if numberPress ~= nil and numberPress >= 1 and numberPress <= 9 then
+        PlayerInventory.hotbarSelect = numberPress
     end
 end
 
