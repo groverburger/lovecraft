@@ -178,6 +178,9 @@ function GetChunk(x,y,z)
     if ChunkHashTable[hashx] ~= nil then
         getChunk = ChunkHashTable[hashx][hashy]
     end
+    if y < 1 or y > WorldHeight then
+        getChunk = nil
+    end
 
     local mx,mz = x%ChunkSize +1, z%ChunkSize +1
 
