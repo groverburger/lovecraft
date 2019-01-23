@@ -6,9 +6,8 @@ function NewAddition(x,y,z, value)
     t.value = value
 
     t.query = function (self)
-        local transp = TileTransparency(GetVoxel(self.x,self.y,self.z))
         if self.value >= 0
-        and (transp == 0 or transp == 2)
+        and TileLightable(GetVoxel(self.x,self.y,self.z))
         and GetChunk(self.x,self.y,self.z) ~= nil
         and GetVoxelData(self.x,self.y,self.z) < self.value then
             --print(self.x,self.y,self.z)
@@ -33,8 +32,7 @@ function NewSunlightAddition(x,y,z, value)
     t.value = value
 
     t.query = function (self)
-        local transp = TileTransparency(GetVoxel(self.x,self.y,self.z))
-        if (transp == 0 or transp == 2)
+        if TileLightable(GetVoxel(self.x,self.y,self.z))
         and GetChunk(self.x,self.y,self.z) ~= nil
         and GetVoxelData(self.x,self.y,self.z) <= self.value then
             --print(self.x,self.y,self.z)
@@ -59,8 +57,7 @@ function NewSubtraction(x,y,z, value)
     t.value = value
 
     t.query = function (self)
-        local transp = TileTransparency(GetVoxel(self.x,self.y,self.z))
-        if transp == 0 or transp == 2 then
+        if TileLightable(GetVoxel(self.x,self.y,self.z)) then
         -- and GetVoxelData(self.x,self.y,self.z) > self.value
         -- and (GetVoxelData(self.x,self.y+1,self.z) < self.value or TileTransparency(GetVoxel(self.x,self.y+1,self.z)) == 0) then
             SetVoxelData(self.x,self.y,self.z, self.value)

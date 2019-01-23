@@ -7,6 +7,7 @@ function NewChunk(x,z)
     chunk.voxels = {}
     chunk.slices = {}
     chunk.heightMap = {}
+    chunk.name = "chunk"
 
     -- store a list of voxels to be updated on next modelUpdate
     chunk.changes = {}
@@ -22,7 +23,7 @@ function NewChunk(x,z)
             for j=1, ChunkSize do
                 local gx,gz = (x-1)*ChunkSize + i-1, (z-1)*ChunkSize + j-1
                 local this = self.heightMap[i][j]
-                print(gx,gz)
+                --print(gx,gz)
 
                 if i == 1 or this > self.heightMap[i-1][j] then
                     LightingQueueAdd(NewSunlightAddition(gx-1,this,gz, 15))
@@ -57,7 +58,7 @@ function NewChunk(x,z)
 
     chunk.initialize = function (self)
         for i=1, WorldHeight/SliceHeight do
-            self.slices[i] = CreateThing(NewChunkSlice(self.x,self.y + (i-1)*SliceHeight+1,self.z, self))
+            self.slices[i] = NewChunkSlice(self.x,self.y + (i-1)*SliceHeight+1,self.z, self)
         end
         self.changes = {}
     end
@@ -216,6 +217,7 @@ end
 function NewChunkSlice(x,y,z, parent)
     local t = NewThing(x,y,z)
     t.parent = parent
+    t.name = "chunkslice"
     local compmodel = Engine.newModel(nil, LightingTexture, {0,0,0})
     compmodel.culling = true
     t:assignModel(compmodel)
@@ -298,7 +300,7 @@ function NewChunkSlice(x,y,z, parent)
                         local get = self.parent:getVoxel(i,j+1,k)
                         if CanDrawFace(get, thisTransparency) then
                             local otx,oty = NumberToCoord(TileTextures(get)[math.min(3, #TileTextures(get))], 16,16)
-                            otx = otx + 16*(thisLight-3)
+                            otx = otx + 16*math.max(thisLight-3, 0)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
@@ -321,7 +323,7 @@ function NewChunkSlice(x,y,z, parent)
                         end
                         if CanDrawFace(get, thisTransparency) then
                             local otx,oty = NumberToCoord(TileTextures(get)[1], 16,16)
-                            otx = otx + 16*(thisLight-2)
+                            otx = otx + 16*math.max(thisLight-2, 0)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
@@ -344,7 +346,7 @@ function NewChunkSlice(x,y,z, parent)
                         end
                         if CanDrawFace(get, thisTransparency) then
                             local otx,oty = NumberToCoord(TileTextures(get)[1], 16,16)
-                            otx = otx + 16*(thisLight-2)
+                            otx = otx + 16*math.max(thisLight-2, 0)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
@@ -367,7 +369,7 @@ function NewChunkSlice(x,y,z, parent)
                         end
                         if CanDrawFace(get, thisTransparency) then
                             local otx,oty = NumberToCoord(TileTextures(get)[1], 16,16)
-                            otx = otx + 16*(thisLight-1)
+                            otx = otx + 16*math.max(thisLight-1, 0)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
@@ -390,7 +392,7 @@ function NewChunkSlice(x,y,z, parent)
                         end
                         if CanDrawFace(get, thisTransparency) then
                             local otx,oty = NumberToCoord(TileTextures(get)[1], 16,16)
-                            otx = otx + 16*(thisLight-1)
+                            otx = otx + 16*math.max(thisLight-1, 0)
                             local otx2,oty2 = otx+1,oty+1
                             local tx,ty = otx*TileWidth/LightValues,oty*TileHeight
                             local tx2,ty2 = otx2*TileWidth/LightValues,oty2*TileHeight
@@ -418,6 +420,7 @@ end
 -- used for building structures across chunk borders
 -- by requesting a block to be built in a chunk that does not yet exist
 function NewChunkRequest(chunkx,chunky, gx,gy,gz, valueg)
+    -- assume structures can only cross one chunk
     if gx < 1 then
         chunkx = chunkx-1
     end

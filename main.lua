@@ -18,7 +18,7 @@ function love.load()
     love.window.setMode(GraphicsWidth,GraphicsHeight, {vsync = -1})
     love.window.setTitle("lövecraft")
 
-    -- for capping game logic / fps at 60 manually
+    -- for capping game logic at 60 manually
     LogicRate = 60
     LogicAccumulator = 0
 
@@ -124,15 +124,18 @@ function love.load()
     ChunkRequests = {}
     LightingQueue = {}
     local worldSize = 6
+
+    print("generating")
     for i=worldSize/-2 +1, worldSize/2 do
-        print(i)
+        --print(i)
         ChunkHashTable[ChunkHash(i)] = {}
         for j=worldSize/-2 +1, worldSize/2 do
-            ChunkList[#ChunkList+1] = CreateThing(NewChunk(i,j))
+            ChunkList[#ChunkList+1] = NewChunk(i,j)
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)] = ChunkList[#ChunkList]
         end
     end
 
+    print("lighting")
     for i=worldSize/-2 +1, worldSize/2 do
         for j=worldSize/-2 +1, worldSize/2 do
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:sunlight()
@@ -140,6 +143,7 @@ function love.load()
     end
     LightingUpdate()
 
+    print("growing")
     for i=worldSize/-2 +1, worldSize/2 do
         for j=worldSize/-2 +1, worldSize/2 do
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:processRequests()
@@ -147,8 +151,9 @@ function love.load()
     end
     LightingUpdate()
 
+    print("modelling")
     for i=worldSize/-2 +1, worldSize/2 do
-        print(i)
+        --print(i)
         for j=worldSize/-2 +1, worldSize/2 do
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:initialize()
         end
@@ -259,23 +264,25 @@ end
 function love.update(dt)
     LogicAccumulator = LogicAccumulator+dt
 
+    -- update 3d scene
+    Scene:update()
     if LogicAccumulator >= 1/LogicRate then
         LogicAccumulator = LogicAccumulator - 1/LogicRate
+    else
+        --return
+    end
 
-        -- update 3d scene
-        Scene:update()
 
-        -- update all things in ThingList update queue
-        local i = 1
-        while i<=#ThingList do
-            local thing = ThingList[i]
-            if thing:update(dt) then
-                i=i+1
-            else
-                table.remove(ThingList, i)
-                thing:destroy()
-                thing:destroyModel()
-            end
+    -- update all things in ThingList update queue
+    local i = 1
+    while i<=#ThingList do
+        local thing = ThingList[i]
+        if thing:update(dt) then
+            i=i+1
+        else
+            table.remove(ThingList, i)
+            thing:destroy()
+            thing:destroyModel()
         end
     end
 end
@@ -331,6 +338,10 @@ function love.draw()
                 love.graphics.print("kB: "..math.floor(collectgarbage('count')),0,50)
             end
             love.graphics.print("FPS: "..love.timer.getFPS(), 0, 70)
+            love.graphics.print("#ThingList: "..#ThingList, 0, 90)
+            for i=1, #ThingList do
+                love.graphics.print(ThingList[i].name, 10, 100+i*15)
+            end
 
             -- draw crosshair
             love.graphics.setColor(1,1,1)

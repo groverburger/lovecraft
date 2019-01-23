@@ -5,7 +5,7 @@ function TileCollisions(n)
     or n == 8
     or n == 9
     or n == 10
-    or n == 11 
+    or n == 11
     or n == 37
     or n == 38
     or n == 39
@@ -17,9 +17,9 @@ function TileCollisions(n)
 end
 
 function TileTransparency(n)
-    if n == 0 
-    or n == 37 
-    or n == 38 
+    if n == 0
+    or n == 37
+    or n == 38
     or n == 6 then -- air (fully transparent)
         return 0
     end
@@ -33,6 +33,11 @@ function TileTransparency(n)
     end
 
     return 3 -- solid (opaque)
+end
+
+function TileLightable(n)
+    local t = TileTransparency(n)
+    return t == 0 or t == 2
 end
 
 function TileTextures(n)

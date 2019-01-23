@@ -42,7 +42,7 @@ function NewPlayer(x,y,z)
         local mx,my = 0,0
         local moving = false
 
-        -- take player input 
+        -- take player input
         if love.keyboard.isDown("w") then
             mx = mx + 0
             my = my - 1
@@ -95,7 +95,7 @@ function NewPlayer(x,y,z)
 
         -- check for collisions with walls along the x direction
         if not TileCollisions(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y,self.z -self.width))
-        and not TileCollisions(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y+1,self.z -self.width)) 
+        and not TileCollisions(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y+1,self.z -self.width))
         and not TileCollisions(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y,self.z +self.width))
         and not TileCollisions(GetVoxel(self.x+self.xSpeed +GetSign(self.xSpeed)*self.width,self.y+1,self.z +self.width)) then
             -- x values are good, cement them
@@ -106,7 +106,7 @@ function NewPlayer(x,y,z)
 
         -- check for collisions with walls along the z direction
         if not TileCollisions(GetVoxel(self.x -self.width,self.y,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width))
-        and not TileCollisions(GetVoxel(self.x -self.width,self.y+1,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width)) 
+        and not TileCollisions(GetVoxel(self.x -self.width,self.y+1,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width))
         and not TileCollisions(GetVoxel(self.x +self.width,self.y,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width))
         and not TileCollisions(GetVoxel(self.x +self.width,self.y+1,self.z+self.zSpeed +GetSign(self.zSpeed)*self.width)) then
             -- z values are good, cement them
@@ -125,7 +125,7 @@ function NewPlayer(x,y,z)
         Scene.camera.pos.y = self.y + math.sin(self.viewBob)*self.viewBobMult*1 +self.eyeLevel
         Scene.camera.pos.z = self.z
 
-        -- update voxel cursor position to whatever block currently pointing at 
+        -- update voxel cursor position to whatever block currently pointing at
         local rx,ry,rz = Scene.camera.pos.x,Scene.camera.pos.y,Scene.camera.pos.z
         local step = 0.1
         self.voxelCursor.model.visible = false
@@ -155,6 +155,7 @@ end
 -- the model for the wireframe outline of the block currently selected by ThePlayer in the world
 function NewVoxelCursor(x,y,z)
     local t = NewThing(x,y,z)
+    t.name = "voxelcursor"
     local model = {}
     local scale = 1.002
     local x,y,z = -0.001,-0.001,-0.001
@@ -207,4 +208,3 @@ function NewVoxelCursor(x,y,z)
 
     return t
 end
-
