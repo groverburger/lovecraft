@@ -14,6 +14,45 @@ function NewPlayer(x,y,z)
     t.width = 0.25
 
     t.update = function (self, dt)
+        if PhysicsStep then
+            self:physics()
+        end
+
+        -- view bobbing
+        local speed = math.dist(0,0, self.xSpeed,self.zSpeed)
+        self.viewBob = self.viewBob + speed*2.75*(dt*60)
+        self.viewBobMult = math.min(speed, 1)
+
+        -- update camera position to new player position
+        Scene.camera.pos.x = self.x
+        Scene.camera.pos.y = self.y + math.sin(self.viewBob)*self.viewBobMult*1 +self.eyeLevel
+        Scene.camera.pos.z = self.z
+
+        -- update voxel cursor position to whatever block currently pointing at
+        local rx,ry,rz = Scene.camera.pos.x,Scene.camera.pos.y,Scene.camera.pos.z
+        local step = 0.1
+        self.voxelCursor.model.visible = false
+        self.cursorHit = false
+        for i=1, 5, step do
+            local chunk, cx,cy,cz, hashx,hashy = GetChunk(rx,ry,rz)
+            if chunk ~= nil and chunk:getVoxel(cx,cy,cz) ~= 0 then
+                self.cursorpos = {x=cx,y=cy,z=cz, chunk=chunk}
+                self.cursorHit = true
+                self.voxelCursor.model.visible = true
+                self.voxelCursor.model:setTransform({math.floor(rx), math.floor(ry), math.floor(rz)})
+                break
+            end
+            self.cursorposPrev = {x=cx,y=cy,z=cz, chunk=chunk}
+
+            rx = rx + math.cos(Scene.camera.angle.x -math.pi/2)*step*math.cos(Scene.camera.angle.y)
+            rz = rz + math.sin(Scene.camera.angle.x -math.pi/2)*step*math.cos(Scene.camera.angle.y)
+            ry = ry - math.sin(Scene.camera.angle.y)*step
+        end
+
+        return true
+    end
+
+    t.physics = function (self)
         local Camera = Scene.camera
 
         -- apply gravity and friction
@@ -114,39 +153,6 @@ function NewPlayer(x,y,z)
         else
             self.zSpeed = 0
         end
-
-        -- view bobbing
-        local speed = math.dist(0,0, self.xSpeed,self.zSpeed)
-        self.viewBob = self.viewBob + speed*2.75
-        self.viewBobMult = math.min(speed, 1)
-
-        -- update camera position to new player position
-        Scene.camera.pos.x = self.x
-        Scene.camera.pos.y = self.y + math.sin(self.viewBob)*self.viewBobMult*1 +self.eyeLevel
-        Scene.camera.pos.z = self.z
-
-        -- update voxel cursor position to whatever block currently pointing at
-        local rx,ry,rz = Scene.camera.pos.x,Scene.camera.pos.y,Scene.camera.pos.z
-        local step = 0.1
-        self.voxelCursor.model.visible = false
-        self.cursorHit = false
-        for i=1, 5, step do
-            local chunk, cx,cy,cz, hashx,hashy = GetChunk(rx,ry,rz)
-            if chunk ~= nil and chunk:getVoxel(cx,cy,cz) ~= 0 then
-                self.cursorpos = {x=cx,y=cy,z=cz, chunk=chunk}
-                self.cursorHit = true
-                self.voxelCursor.model.visible = true
-                self.voxelCursor.model:setTransform({math.floor(rx), math.floor(ry), math.floor(rz)})
-                break
-            end
-            self.cursorposPrev = {x=cx,y=cy,z=cz, chunk=chunk}
-
-            rx = rx + math.cos(Scene.camera.angle.x -math.pi/2)*step*math.cos(Scene.camera.angle.y)
-            rz = rz + math.sin(Scene.camera.angle.x -math.pi/2)*step*math.cos(Scene.camera.angle.y)
-            ry = ry - math.sin(Scene.camera.angle.y)*step
-        end
-
-        return true
     end
 
     return t

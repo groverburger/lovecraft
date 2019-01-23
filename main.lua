@@ -21,6 +21,7 @@ function love.load()
     -- for capping game logic at 60 manually
     LogicRate = 60
     LogicAccumulator = 0
+    PhysicsStep = true
 
     -- create scene object from SS3D engine
     Scene = Engine.newScene(GraphicsWidth, GraphicsHeight)
@@ -136,12 +137,12 @@ function love.load()
     end
 
     print("lighting")
-    for i=worldSize/-2 +1, worldSize/2 do
-        for j=worldSize/-2 +1, worldSize/2 do
-            ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:sunlight()
-        end
-    end
-    LightingUpdate()
+    -- for i=worldSize/-2 +1, worldSize/2 do
+        -- for j=worldSize/-2 +1, worldSize/2 do
+            -- ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:sunlight()
+        -- end
+    -- end
+    -- LightingUpdate()
 
     print("growing")
     for i=worldSize/-2 +1, worldSize/2 do
@@ -266,12 +267,11 @@ function love.update(dt)
 
     -- update 3d scene
     Scene:update()
+    PhysicsStep = false
     if LogicAccumulator >= 1/LogicRate then
         LogicAccumulator = LogicAccumulator - 1/LogicRate
-    else
-        --return
+        PhysicsStep = true
     end
-
 
     -- update all things in ThingList update queue
     local i = 1
@@ -338,10 +338,11 @@ function love.draw()
                 love.graphics.print("kB: "..math.floor(collectgarbage('count')),0,50)
             end
             love.graphics.print("FPS: "..love.timer.getFPS(), 0, 70)
-            love.graphics.print("#ThingList: "..#ThingList, 0, 90)
-            for i=1, #ThingList do
-                love.graphics.print(ThingList[i].name, 10, 100+i*15)
-            end
+            -- love.graphics.print("Press 'V' to toggle VSync", 0, 90)
+            -- love.graphics.print("#ThingList: "..#ThingList, 0, 90)
+            -- for i=1, #ThingList do
+                -- love.graphics.print(ThingList[i].name, 10, 100+i*15)
+            -- end
 
             -- draw crosshair
             love.graphics.setColor(1,1,1)
