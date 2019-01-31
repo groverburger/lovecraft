@@ -124,7 +124,8 @@ function love.load()
     ChunkList = {}
     ChunkRequests = {}
     LightingQueue = {}
-    local worldSize = 6
+    LightingRemovalQueue = {}
+    local worldSize = 4
 
     print("generating")
     for i=worldSize/-2 +1, worldSize/2 do
@@ -225,6 +226,23 @@ function GetVoxelData(x,y,z)
     end
     return d
 end
+
+function GetVoxelFirstData(x,y,z)
+    local chunk, cx,cy,cz = GetChunk(x,y,z)
+    if chunk ~= nil then
+        return chunk:getVoxelFirstData(cx,cy,cz)
+    end
+    return 0
+end
+
+function GetVoxelSecondData(x,y,z)
+    local chunk, cx,cy,cz = GetChunk(x,y,z)
+    if chunk ~= nil then
+        return chunk:getVoxelSecondData(cx,cy,cz)
+    end
+    return 0
+end
+
 function SetVoxel(x,y,z, value)
     local chunk, cx,cy,cz = GetChunk(x,y,z)
     if chunk ~= nil then
@@ -242,15 +260,42 @@ function SetVoxelData(x,y,z, value)
     return false
 end
 
+function SetVoxelFirstData(x,y,z, value)
+    local chunk, cx,cy,cz = GetChunk(x,y,z)
+    if chunk ~= nil then
+        chunk:setVoxelFirstData(cx,cy,cz, value)
+        return true
+    end
+    return false
+end
+function SetVoxelSecondData(x,y,z, value)
+    local chunk, cx,cy,cz = GetChunk(x,y,z)
+    if chunk ~= nil then
+        chunk:setVoxelSecondData(cx,cy,cz, value)
+        return true
+    end
+    return false
+end
+
 function LightingQueueAdd(lthing)
     LightingQueue[#LightingQueue+1] = lthing
     return lthing
 end
+function LightingRemovalQueueAdd(lthing)
+    LightingRemovalQueue[#LightingRemovalQueue+1] = lthing
+    return lthing
+end
 function LightingUpdate()
-    local i=1
-    while i <= #LightingQueue do
-        LightingQueue[i]:query()
-        table.remove(LightingQueue, i)
+    print("lightingUpdate!")
+    while #LightingRemovalQueue > 0 do
+        LightingRemovalQueue[1]:query()
+        table.remove(LightingRemovalQueue, 1)
+    end
+    print(#LightingQueue)
+
+    while #LightingQueue > 0 do
+        LightingQueue[1]:query()
+        table.remove(LightingQueue, 1)
     end
 end
 
@@ -338,6 +383,8 @@ function love.draw()
                 love.graphics.print("kB: "..math.floor(collectgarbage('count')),0,50)
             end
             love.graphics.print("FPS: "..love.timer.getFPS(), 0, 70)
+            love.graphics.print("#LightingRemovalQueue: "..#LightingRemovalQueue, 0, 90)
+            love.graphics.print("#LightingQueue: "..#LightingQueue, 0, 110)
             -- love.graphics.print("Press 'V' to toggle VSync", 0, 90)
             -- love.graphics.print("#ThingList: "..#ThingList, 0, 90)
             -- for i=1, #ThingList do

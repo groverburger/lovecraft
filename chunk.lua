@@ -26,16 +26,16 @@ function NewChunk(x,z)
                 --print(gx,gz)
 
                 if i == 1 or this > self.heightMap[i-1][j] then
-                    LightingQueueAdd(NewSunlightAddition(gx-1,this,gz, 15))
+                    LightingQueueAdd(NewSunlightDownAddition(gx-1,this,gz, 15))
                 end
                 if j == 1 or this > self.heightMap[i][j-1] then
-                    LightingQueueAdd(NewSunlightAddition(gx,this,gz-1, 15))
+                    LightingQueueAdd(NewSunlightDownAddition(gx,this,gz-1, 15))
                 end
                 if i == ChunkSize or this > self.heightMap[i+1][j] then
-                    LightingQueueAdd(NewSunlightAddition(gx+1,this,gz, 15))
+                    LightingQueueAdd(NewSunlightDownAddition(gx+1,this,gz, 15))
                 end
                 if j == ChunkSize or this > self.heightMap[i][j+1] then
-                    LightingQueueAdd(NewSunlightAddition(gx,this,gz+1, 15))
+                    LightingQueueAdd(NewSunlightDownAddition(gx,this,gz+1, 15))
                 end
             end
         end
@@ -77,6 +77,32 @@ function NewChunk(x,z)
         return 0, 0
     end
 
+    chunk.getVoxelFirstData = function (self, x,y,z)
+        x = math.floor(x)
+        y = math.floor(y)
+        z = math.floor(z)
+        if x <= ChunkSize and x >= 1
+        and z <= ChunkSize and z >= 1
+        and y >= 1 and y <= WorldHeight then
+            return string.byte(self.voxels[x][z]:sub((y-1)*2 +2,(y-1)*2 +2))%16
+        end
+
+        return 0
+    end
+
+    chunk.getVoxelSecondData = function (self, x,y,z)
+        x = math.floor(x)
+        y = math.floor(y)
+        z = math.floor(z)
+        if x <= ChunkSize and x >= 1
+        and z <= ChunkSize and z >= 1
+        and y >= 1 and y <= WorldHeight then
+            return math.floor( string.byte(self.voxels[x][z]:sub((y-1)*2 +2,(y-1)*2 +2))/16 )*16
+        end
+
+        return 0
+    end
+
     chunk.setVoxelRaw = function (self, x,y,z, value,light)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
@@ -99,9 +125,9 @@ function NewChunk(x,z)
             local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
             local transp = TileTransparency(value)
             if transp == 0 or transp == 2 then
-                LightingQueueAdd(NewAddition(gx,gy,gz, 15))
+                LightingQueueAdd(NewSunlightDownAddition(gx,gy,gz, 15))
             else
-                LightingQueueAdd(NewSubtraction(gx,gy-1,gz, 12))
+                LightingRemovalQueueAdd(NewSunlightDownSubtraction(gx,gy-1,gz, 12))
             end
             self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value)..string.char(12))
 
@@ -117,6 +143,38 @@ function NewChunk(x,z)
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
             self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +2, string.char(value))
+
+            self.changes[#self.changes+1] = {x,y,z}
+        end
+    end
+
+    -- sunlight data
+    chunk.setVoxelFirstData = function (self, x,y,z, value)
+        x = math.floor(x)
+        y = math.floor(y)
+        z = math.floor(z)
+        if x <= ChunkSize and x >= 1
+        and z <= ChunkSize and z >= 1
+        and y >= 1 and y <= WorldHeight then
+            local get = string.byte(self.voxels[x][z]:sub((y-1)*2 +2,(y-1)*2 +2))
+            local nvalue = math.floor(get/16)*16 + value
+            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +2, string.char(nvalue))
+
+            self.changes[#self.changes+1] = {x,y,z}
+        end
+    end
+
+    -- local light data
+    chunk.setVoxelSecondData = function (self, x,y,z, value)
+        x = math.floor(x)
+        y = math.floor(y)
+        z = math.floor(z)
+        if x <= ChunkSize and x >= 1
+        and z <= ChunkSize and z >= 1
+        and y >= 1 and y <= WorldHeight then
+            local get = string.byte(self.voxels[x][z]:sub((y-1)*2 +2,(y-1)*2 +2))
+            local nvalue = get%16 + value*16
+            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +2, string.char(nvalue))
 
             self.changes[#self.changes+1] = {x,y,z}
         end
@@ -144,26 +202,26 @@ function NewChunk(x,z)
                     sliceUpdates[math.max(index-1, 1)][1] = true
                 end
 
-                print(self.changes[i][1], self.changes[i][2], self.changes[i][3])
+                --print(self.changes[i][1], self.changes[i][2], self.changes[i][3])
                 -- neg x
                 if self.changes[i][1] == 1 then
                     sliceUpdates[index][2] = true
-                    print("neg x")
+                    --print("neg x")
                 end
                 -- pos x
                 if self.changes[i][1] == ChunkSize then
                     sliceUpdates[index][3] = true
-                    print("pos x")
+                    --print("pos x")
                 end
                 -- neg z
                 if self.changes[i][3] == 1 then
                     sliceUpdates[index][4] = true
-                    print("neg z")
+                    --print("neg z")
                 end
                 -- pos z
                 if self.changes[i][3] == ChunkSize then
                     sliceUpdates[index][5] = true
-                    print("pos z")
+                    --print("pos z")
                 end
             end
         end
