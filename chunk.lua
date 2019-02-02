@@ -26,16 +26,16 @@ function NewChunk(x,z)
                 --print(gx,gz)
 
                 if i == 1 or this > self.heightMap[i-1][j] then
-                    LightingQueueAdd(NewSunlightDownAddition(gx-1,this,gz, 15))
+                    NewSunlightDownAddition(gx-1,this,gz, 15)
                 end
                 if j == 1 or this > self.heightMap[i][j-1] then
-                    LightingQueueAdd(NewSunlightDownAddition(gx,this,gz-1, 15))
+                    NewSunlightDownAddition(gx,this,gz-1, 15)
                 end
                 if i == ChunkSize or this > self.heightMap[i+1][j] then
-                    LightingQueueAdd(NewSunlightDownAddition(gx+1,this,gz, 15))
+                    NewSunlightDownAddition(gx+1,this,gz, 15)
                 end
                 if j == ChunkSize or this > self.heightMap[i][j+1] then
-                    LightingQueueAdd(NewSunlightDownAddition(gx,this,gz+1, 15))
+                    NewSunlightDownAddition(gx,this,gz+1, 15)
                 end
             end
         end
@@ -49,7 +49,7 @@ function NewChunk(x,z)
                 for j=1, #request.blocks do
                     local block = request.blocks[j]
                     if not TileCollisions(self:getVoxel(block.x,block.y,block.z)) then
-                        self:setVoxelRaw(block.x,block.y,block.z, block.value)
+                        self:setVoxel(block.x,block.y,block.z, block.value)
                     end
                 end
             end
@@ -124,13 +124,33 @@ function NewChunk(x,z)
         and y >= 1 and y <= WorldHeight then
             local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
             local transp = TileTransparency(value)
-            if transp == 0 or transp == 2 then
-                LightingQueueAdd(NewSunlightDownAddition(gx,gy,gz, 15))
-            else
-                LightingRemovalQueueAdd(NewSunlightDownSubtraction(gx,gy-1,gz, 12))
-            end
-            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value)..string.char(12))
 
+            local sunget = self:getVoxelFirstData(x,y+1,z)
+            if (transp == 0 or transp == 2)
+            and sunget > 0 then
+                NewSunlightDownAddition(gx,gy,gz, sunget)
+            else
+                NewSunlightDownSubtraction(gx,gy-1,gz, 12)
+            end
+
+            local nget = GetVoxelFirstData(gx+1,gy,gz)
+            if nget < 15 then
+                NewSunlightSubtraction(gx+1,gy,gz, nget+1)
+            end
+            local nget = GetVoxelFirstData(gx-1,gy,gz)
+            if nget < 15 then
+                NewSunlightSubtraction(gx-1,gy,gz, nget+1)
+            end
+            local nget = GetVoxelFirstData(gx,gy,gz+1)
+            if nget < 15 then
+                NewSunlightSubtraction(gx,gy,gz+1, nget+1)
+            end
+            local nget = GetVoxelFirstData(gx,gy,gz-1)
+            if nget < 15 then
+                NewSunlightSubtraction(gx,gy,gz-1, nget+1)
+            end
+
+            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value))
             self.changes[#self.changes+1] = {x,y,z}
         end
     end

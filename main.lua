@@ -286,12 +286,10 @@ function LightingRemovalQueueAdd(lthing)
     return lthing
 end
 function LightingUpdate()
-    print("lightingUpdate!")
     while #LightingRemovalQueue > 0 do
         LightingRemovalQueue[1]:query()
         table.remove(LightingRemovalQueue, 1)
     end
-    print(#LightingQueue)
 
     while #LightingQueue > 0 do
         LightingQueue[1]:query()
