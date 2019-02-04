@@ -40,6 +40,11 @@ function TileLightable(n)
     return t == 0 or t == 2
 end
 
+function TileSemiLightable(n)
+    local t = TileTransparency(n)
+    return t == 1
+end
+
 function TileTextures(n)
     local list = {
         -- textures are in format: SIDE UP DOWN FRONT

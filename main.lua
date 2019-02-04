@@ -25,7 +25,7 @@ function love.load()
 
     -- create scene object from SS3D engine
     Scene = Engine.newScene(GraphicsWidth, GraphicsHeight)
-    Scene.camera.perspective = TransposeMatrix(cpml.mat4.from_perspective(90, love.graphics.getWidth()/love.graphics.getHeight(), 0.1, 10000))
+    Scene.camera.perspective = TransposeMatrix(cpml.mat4.from_perspective(90, love.graphics.getWidth()/love.graphics.getHeight(), 0.001, 10000))
 
     -- load assets
     DefaultTexture = love.graphics.newImage("assets/texture.png")

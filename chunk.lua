@@ -123,34 +123,54 @@ function NewChunk(x,z)
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
             local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
-            local transp = TileTransparency(value)
 
-            local sunget = self:getVoxelFirstData(x,y+1,z)
-            if (transp == 0 or transp == 2)
-            and sunget > 0 then
-                NewSunlightDownAddition(gx,gy,gz, sunget)
+            local sunlight = self:getVoxelFirstData(x,y+1,z)
+            local sunget = self:getVoxel(x,y+1,z)
+            local isLightable = TileLightable(value)
+            if isLightable then
+                -- if removed block or put in lightable block
+                if TileLightable(sunget) and sunlight == 15 then
+                    NewSunlightDownAddition(gx,gy,gz, sunlight)
+                else
+                    NewSunlightAdditionCreation(gx+1,gy,gz)
+                    NewSunlightAdditionCreation(gx-1,gy,gz)
+                    NewSunlightAdditionCreation(gx,gy+1,gz)
+                    NewSunlightAdditionCreation(gx,gy-1,gz)
+                    NewSunlightAdditionCreation(gx,gy,gz+1)
+                    NewSunlightAdditionCreation(gx,gy,gz-1)
+                end
+
+                self:setVoxelFirstData(x,y,z, 0)
             else
-                NewSunlightDownSubtraction(gx,gy-1,gz, 12)
-            end
+                -- if placed block remove sunlight around it
+                NewSunlightDownSubtraction(gx,gy-1,gz)
 
-            local nget = GetVoxelFirstData(gx+1,gy,gz)
-            if nget < 15 then
-                NewSunlightSubtraction(gx+1,gy,gz, nget+1)
-            end
-            local nget = GetVoxelFirstData(gx-1,gy,gz)
-            if nget < 15 then
-                NewSunlightSubtraction(gx-1,gy,gz, nget+1)
-            end
-            local nget = GetVoxelFirstData(gx,gy,gz+1)
-            if nget < 15 then
-                NewSunlightSubtraction(gx,gy,gz+1, nget+1)
-            end
-            local nget = GetVoxelFirstData(gx,gy,gz-1)
-            if nget < 15 then
-                NewSunlightSubtraction(gx,gy,gz-1, nget+1)
+                local nget = GetVoxelFirstData(gx,gy+1,gz)
+                if nget < 15 then
+                    NewSunlightSubtraction(gx,gy+1,gz, nget+1)
+                end
+                local nget = GetVoxelFirstData(gx+1,gy,gz)
+                if nget < 15 then
+                    NewSunlightSubtraction(gx+1,gy,gz, nget+1)
+                end
+                local nget = GetVoxelFirstData(gx-1,gy,gz)
+                if nget < 15 then
+                    NewSunlightSubtraction(gx-1,gy,gz, nget+1)
+                end
+                local nget = GetVoxelFirstData(gx,gy,gz+1)
+                if nget < 15 then
+                    NewSunlightSubtraction(gx,gy,gz+1, nget+1)
+                end
+                local nget = GetVoxelFirstData(gx,gy,gz-1)
+                if nget < 15 then
+                    NewSunlightSubtraction(gx,gy,gz-1, nget+1)
+                end
             end
 
             self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value))
+
+            if not isLightable then
+            end
             self.changes[#self.changes+1] = {x,y,z}
         end
     end

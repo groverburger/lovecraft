@@ -28,6 +28,63 @@ function NewSunlightAddition(x,y,z, value)
     LightingQueueAdd(t)
 end
 
+function NewSunlightAdditionCreation(x,y,z)
+    local t = {}
+    t.x = x
+    t.y = y
+    t.z = z
+
+    t.query = function (self)
+        local cget,cx,cy,cz = GetChunk(self.x,self.y,self.z)
+        if cget == nil then
+            return
+        end
+        local val,dat = cget:getVoxel(cx,cy,cz)
+
+        if TileLightable(val)
+        and dat > 0 then
+            -- cget:setVoxelFirstData(cx,cy,cz, self.value)
+            NewSunlightForceAddition(self.x,self.y,self.z, dat)
+            -- NewSunlightAddition(self.x,self.y+1,self.z, dat-1)
+            -- NewSunlightAddition(self.x+1,self.y,self.z, dat-1)
+            -- NewSunlightAddition(self.x-1,self.y,self.z, dat-1)
+            -- NewSunlightAddition(self.x,self.y,self.z+1, dat-1)
+            -- NewSunlightAddition(self.x,self.y,self.z-1, dat-1)
+        end
+    end
+
+    LightingQueueAdd(t)
+end
+
+function NewSunlightForceAddition(x,y,z, value)
+    local t = {}
+    t.x = x
+    t.y = y
+    t.z = z
+    t.value = value
+
+    t.query = function (self)
+        local cget,cx,cy,cz = GetChunk(self.x,self.y,self.z)
+        if cget == nil then
+            return
+        end
+        local val,dat = cget:getVoxel(cx,cy,cz)
+
+        if self.value >= 0
+        and TileLightable(val) then
+            cget:setVoxelFirstData(cx,cy,cz, self.value)
+            NewSunlightAddition(self.x,self.y-1,self.z, self.value-1)
+            NewSunlightAddition(self.x,self.y+1,self.z, self.value-1)
+            NewSunlightAddition(self.x+1,self.y,self.z, self.value-1)
+            NewSunlightAddition(self.x-1,self.y,self.z, self.value-1)
+            NewSunlightAddition(self.x,self.y,self.z+1, self.value-1)
+            NewSunlightAddition(self.x,self.y,self.z-1, self.value-1)
+        end
+    end
+
+    LightingQueueAdd(t)
+end
+
 function NewSunlightDownAddition(x,y,z, value)
     local t = {}
     t.x = x
@@ -83,7 +140,7 @@ function NewSunlightSubtraction(x,y,z, value)
                 NewSunlightSubtraction(self.x,self.y,self.z+1, fget)
                 NewSunlightSubtraction(self.x,self.y,self.z-1, fget)
             else
-                NewSunlightDownAddition(self.x,self.y,self.z, fget)
+                NewSunlightForceAddition(self.x,self.y,self.z, fget)
             end
 
             return false
