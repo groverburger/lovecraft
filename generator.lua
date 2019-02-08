@@ -52,6 +52,7 @@ function DefaultGeneration(chunk, x,z)
         chunk.voxels[i] = {}
         for k=1, ChunkSize do
             local temp = {}
+            chunk.heightMap[i][k] = 0
 
             -- for every x and z value start at top of world going down
             -- when hit first solid block is grass, next four are dirt
@@ -235,7 +236,7 @@ end
 
 -- noise function used in chunk generation
 function ChunkNoise(x,y,z)
-    return Noise(x,y,z, 16,12, 1)
+    return Noise(x,y,z, 20,12, 1)
 end
 
 function Noise(x,y,z, freq,yfreq, si)

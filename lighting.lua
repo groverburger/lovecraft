@@ -1,3 +1,23 @@
+function LightingQueueAdd(lthing)
+    LightingQueue[#LightingQueue+1] = lthing
+    return lthing
+end
+function LightingRemovalQueueAdd(lthing)
+    LightingRemovalQueue[#LightingRemovalQueue+1] = lthing
+    return lthing
+end
+function LightingUpdate()
+    while #LightingRemovalQueue > 0 do
+        LightingRemovalQueue[1]:query()
+        table.remove(LightingRemovalQueue, 1)
+    end
+
+    while #LightingQueue > 0 do
+        LightingQueue[1]:query()
+        table.remove(LightingQueue, 1)
+    end
+end
+
 function NewSunlightAddition(x,y,z, value)
     local t = {}
     t.x = x

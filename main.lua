@@ -6,6 +6,7 @@ require "player"
 require "generator"
 require "lighting"
 require "chunk"
+require "caves"
 
 function love.load()
     -- window graphics settings
@@ -125,6 +126,7 @@ function love.load()
     ChunkRequests = {}
     LightingQueue = {}
     LightingRemovalQueue = {}
+    CaveList = {}
     local worldSize = 4
 
     print("generating")
@@ -135,6 +137,11 @@ function love.load()
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)] = ChunkList[#ChunkList]
         end
     end
+
+    for i=1, 32 do
+        NewCave(rand(-32,32),rand(8,100),rand(-32,32))
+    end
+    UpdateCaves()
 
     print("lighting")
     for i=worldSize/-2 +1, worldSize/2 do
@@ -275,26 +282,6 @@ function SetVoxelSecondData(x,y,z, value)
     return false
 end
 
-function LightingQueueAdd(lthing)
-    LightingQueue[#LightingQueue+1] = lthing
-    return lthing
-end
-function LightingRemovalQueueAdd(lthing)
-    LightingRemovalQueue[#LightingRemovalQueue+1] = lthing
-    return lthing
-end
-function LightingUpdate()
-    while #LightingRemovalQueue > 0 do
-        LightingRemovalQueue[1]:query()
-        table.remove(LightingRemovalQueue, 1)
-    end
-
-    while #LightingQueue > 0 do
-        LightingQueue[1]:query()
-        table.remove(LightingQueue, 1)
-    end
-end
-
 function UpdateChangedChunks()
     for i=1, #ChunkList do
         if #ChunkList[i].changes > 0 then
@@ -379,8 +366,7 @@ function love.draw()
                 love.graphics.print("kB: "..math.floor(collectgarbage('count')),0,50)
             end
             love.graphics.print("FPS: "..love.timer.getFPS(), 0, 70)
-            love.graphics.print("#LightingRemovalQueue: "..#LightingRemovalQueue, 0, 90)
-            love.graphics.print("#LightingQueue: "..#LightingQueue, 0, 110)
+            love.graphics.print("#CaveList: "..#CaveList, 0, 90)
             -- love.graphics.print("Press 'V' to toggle VSync", 0, 90)
             -- love.graphics.print("#ThingList: "..#ThingList, 0, 90)
             -- for i=1, #ThingList do
@@ -466,3 +452,18 @@ function lerp(a,b,t) return (1-t)*a + t*b end
 function math.angle(x1,y1, x2,y2) return math.atan2(y2-y1, x2-x1) end
 function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
 function math.dist3d(x1,y1,z1, x2,y2,z2) return ((x2-x1)^2+(y2-y1)^2+(z2-z1)^2)^0.5 end
+
+function choose(arr)
+    return arr[math.floor(love.math.random()*(#arr))+1]
+end
+function rand(min,max, interval)
+    local interval = interval or 1
+    local c = {}
+    local index = 1
+    for i=min, max, interval do
+        c[index] = i
+        index = index + 1
+    end
+
+    return choose(c)
+end

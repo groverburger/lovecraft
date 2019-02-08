@@ -142,14 +142,6 @@ function NewChunk(x,z)
 
                 self:setVoxelFirstData(x,y,z, 0)
             else
-                -- if TileSemiLightable(value) then
-                --     NewSunlightAdditionCreation(gx,gy+1,gz)
-                --     NewSunlightAdditionCreation(gx,gy-1,gz)
-                --     NewSunlightAdditionCreation(gx+1,gy,gz)
-                --     NewSunlightAdditionCreation(gx-1,gy,gz)
-                --     NewSunlightAdditionCreation(gx,gy+1,gz)
-                --     NewSunlightAdditionCreation(gx,gy-1,gz)
-                -- end
                 -- if placed block remove sunlight around it
                 NewSunlightDownSubtraction(gx,gy-1,gz)
 
