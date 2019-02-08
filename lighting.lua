@@ -13,7 +13,7 @@ function NewSunlightAddition(x,y,z, value)
         local val,dat = cget:getVoxel(cx,cy,cz)
 
         if self.value >= 0
-        and TileLightable(val)
+        and TileSemiLightable(val)
         and dat < self.value then
             cget:setVoxelFirstData(cx,cy,cz, self.value)
             NewSunlightAddition(self.x,self.y-1,self.z, self.value-1)
@@ -41,7 +41,7 @@ function NewSunlightAdditionCreation(x,y,z)
         end
         local val,dat = cget:getVoxel(cx,cy,cz)
 
-        if TileLightable(val)
+        if TileSemiLightable(val)
         and dat > 0 then
             -- cget:setVoxelFirstData(cx,cy,cz, self.value)
             NewSunlightForceAddition(self.x,self.y,self.z, dat)
@@ -71,7 +71,7 @@ function NewSunlightForceAddition(x,y,z, value)
         local val,dat = cget:getVoxel(cx,cy,cz)
 
         if self.value >= 0
-        and TileLightable(val) then
+        and TileSemiLightable(val) then
             cget:setVoxelFirstData(cx,cy,cz, self.value)
             NewSunlightAddition(self.x,self.y-1,self.z, self.value-1)
             NewSunlightAddition(self.x,self.y+1,self.z, self.value-1)
@@ -130,7 +130,7 @@ function NewSunlightSubtraction(x,y,z, value)
 
         if fget > 0
         and self.value >= 0
-        and TileLightable(val) then
+        and TileSemiLightable(val) then
             if fget < self.value then
                 cget:setVoxelFirstData(cx,cy,cz, 0)
                 NewSunlightSubtraction(self.x,self.y-1,self.z, fget)
@@ -157,7 +157,7 @@ function NewSunlightDownSubtraction(x,y,z)
     t.z = z
 
     t.query = function (self)
-        if TileLightable(GetVoxel(self.x,self.y,self.z)) then
+        if TileSemiLightable(GetVoxel(self.x,self.y,self.z)) then
             SetVoxelFirstData(self.x,self.y,self.z, 0)
 
             NewSunlightDownSubtraction(self.x,self.y-1,self.z)
@@ -166,6 +166,7 @@ function NewSunlightDownSubtraction(x,y,z)
             NewSunlightSubtraction(self.x-1,self.y,self.z, 15)
             NewSunlightSubtraction(self.x,self.y,self.z+1, 15)
             NewSunlightSubtraction(self.x,self.y,self.z-1, 15)
+            NewSunlightSubtraction(self.x,self.y,self.z, 15)
 
             return true
         end

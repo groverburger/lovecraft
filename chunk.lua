@@ -25,7 +25,7 @@ function NewChunk(x,z)
                 local this = self.heightMap[i][j]
                 --print(gx,gz)
 
-                if i == 1 or this > self.heightMap[i-1][j] then
+                if i == 1 or this > self.heightMap[i-1][j]+1 then
                     NewSunlightDownAddition(gx-1,this,gz, 15)
                 end
                 if j == 1 or this > self.heightMap[i][j-1] then
@@ -142,6 +142,14 @@ function NewChunk(x,z)
 
                 self:setVoxelFirstData(x,y,z, 0)
             else
+                -- if TileSemiLightable(value) then
+                --     NewSunlightAdditionCreation(gx,gy+1,gz)
+                --     NewSunlightAdditionCreation(gx,gy-1,gz)
+                --     NewSunlightAdditionCreation(gx+1,gy,gz)
+                --     NewSunlightAdditionCreation(gx-1,gy,gz)
+                --     NewSunlightAdditionCreation(gx,gy+1,gz)
+                --     NewSunlightAdditionCreation(gx,gy-1,gz)
+                -- end
                 -- if placed block remove sunlight around it
                 NewSunlightDownSubtraction(gx,gy-1,gz)
 
@@ -169,8 +177,6 @@ function NewChunk(x,z)
 
             self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value))
 
-            if not isLightable then
-            end
             self.changes[#self.changes+1] = {x,y,z}
         end
     end

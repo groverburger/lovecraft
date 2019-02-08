@@ -129,7 +129,6 @@ function love.load()
 
     print("generating")
     for i=worldSize/-2 +1, worldSize/2 do
-        --print(i)
         ChunkHashTable[ChunkHash(i)] = {}
         for j=worldSize/-2 +1, worldSize/2 do
             ChunkList[#ChunkList+1] = NewChunk(i,j)
@@ -155,7 +154,6 @@ function love.load()
 
     print("modelling")
     for i=worldSize/-2 +1, worldSize/2 do
-        --print(i)
         for j=worldSize/-2 +1, worldSize/2 do
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:initialize()
         end

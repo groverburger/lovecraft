@@ -42,7 +42,7 @@ end
 
 function TileSemiLightable(n)
     local t = TileTransparency(n)
-    return t == 1
+    return t == 0 or t == 1 or t == 2
 end
 
 function TileTextures(n)
