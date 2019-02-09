@@ -149,15 +149,20 @@ function love.load()
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:sunlight()
         end
     end
-    LightingUpdate()
 
-    print("growing")
+    print("populating")
+    for i=worldSize/-2 +1, worldSize/2 do
+        for j=worldSize/-2 +1, worldSize/2 do
+            ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:populate()
+        end
+    end
+
+    print("processing requests")
     for i=worldSize/-2 +1, worldSize/2 do
         for j=worldSize/-2 +1, worldSize/2 do
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:processRequests()
         end
     end
-    LightingUpdate()
 
     print("modelling")
     for i=worldSize/-2 +1, worldSize/2 do

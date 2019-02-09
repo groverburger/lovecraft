@@ -27,15 +27,19 @@ function NewChunk(x,z)
 
                 if i == 1 or this > self.heightMap[i-1][j]+1 then
                     NewSunlightDownAddition(gx-1,this,gz, 15)
+                    LightingUpdate()
                 end
                 if j == 1 or this > self.heightMap[i][j-1] then
                     NewSunlightDownAddition(gx,this,gz-1, 15)
+                    LightingUpdate()
                 end
                 if i == ChunkSize or this > self.heightMap[i+1][j] then
                     NewSunlightDownAddition(gx+1,this,gz, 15)
+                    LightingUpdate()
                 end
                 if j == ChunkSize or this > self.heightMap[i][j+1] then
                     NewSunlightDownAddition(gx,this,gz+1, 15)
+                    LightingUpdate()
                 end
             end
         end
@@ -50,6 +54,29 @@ function NewChunk(x,z)
                     local block = request.blocks[j]
                     if not TileCollisions(self:getVoxel(block.x,block.y,block.z)) then
                         self:setVoxel(block.x,block.y,block.z, block.value)
+                        LightingUpdate()
+                    end
+                end
+            end
+        end
+    end
+
+    -- populate chunk with trees and flowers
+    chunk.populate = function (self)
+        for i=1, ChunkSize do
+            for j=1, ChunkSize do
+                local height = self.heightMap[i][j]
+                local xx = (self.x-1)*ChunkSize + i
+                local zz = (self.z-1)*ChunkSize + j
+
+                if TileCollisions(self:getVoxel(i,height,j)) then
+                    if love.math.random() < love.math.noise(xx/64,zz/64)*0.02 then
+                        -- put a tree here
+                        GenerateTree(self, i,height,j)
+                        self:setVoxelRaw(i,height,j, 3,15)
+                    elseif love.math.noise(xx/32,zz/32) > 0.9 and love.math.random() < 0.2 then
+                        -- put a flower here
+                        self:setVoxelRaw(i,height+1,j, 38,15)
                     end
                 end
             end

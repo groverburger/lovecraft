@@ -71,8 +71,8 @@ function TileTextures(n)
         {48}, -- 19 sponge
         {49}, -- 20 glass
     }
-    list[38] = {13} -- 18 yellow flower
-    list[39] = {12} -- 18 rose
+    list[38] = {13} -- 37 yellow flower
+    list[39] = {12} -- 38 rose
     list[46] = {7} -- 18 leaves
 
     -- transforms the list into base 0 to accomodate for air blocks

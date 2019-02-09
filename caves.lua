@@ -40,8 +40,8 @@ function NewCave(x,y,z)
         end
 
         self.x = self.x + math.sin(self.theta)*math.cos(self.phi)
-        self.y = self.y + math.cos(self.theta)*math.cos(self.phi)
-        self.z = self.z + math.sin(self.phi)
+        self.y = self.y + math.sin(self.phi)
+        self.z = self.z + math.cos(self.theta)*math.cos(self.phi)
 
         self.theta = self.theta + self.deltaTheta*0.2
         self.deltaTheta = self.deltaTheta*0.9 + love.math.random() - love.math.random()
@@ -67,10 +67,16 @@ function NewCave(x,y,z)
             for j=-self.radius, self.radius do
                 for k=-self.radius, self.radius do
                     if math.dist3d(i,j,k, 0,0,0) <= self.radius then
-                        local chunk, cx,cy,cz = GetChunk(self.x+i,self.y+j,self.z+k)
+                        local gx,gy,gz = self.x+i,self.y+j,self.z+k
+                        local chunk, cx,cy,cz = GetChunk(gx,gy,gz)
 
                         if chunk ~= nil then
                             chunk:setVoxelRaw(cx,cy,cz, 0,0)
+
+                            if cy == chunk.heightMap[cx][cz] then
+                                NewSunlightDownAddition(gx,gy,gz, 15)
+                                LightingUpdate()
+                            end
                         end
                     end
                 end

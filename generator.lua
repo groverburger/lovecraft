@@ -5,47 +5,6 @@ function DefaultGeneration(chunk, x,z)
     local floor = 48
     local ceiling = 120
 
-    local genTree = function (x,y,z)
-        local treeHeight = 4 + math.floor(love.math.random()*2 +0.5)
-
-        for tr = 1, treeHeight do
-            NewChunkRequest(chunk.x,chunk.z, x,y+tr,z, 17)
-        end
-
-        local leafWidth = 2
-        for lx = -leafWidth, leafWidth do
-            for ly = -leafWidth, leafWidth do
-                local chance = 1
-                if math.abs(lx) == leafWidth and math.abs(ly) == leafWidth then
-                    chance = 0.5
-                end
-
-                if love.math.random() < chance then
-                    NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight-2,z+ly, 18)
-                end
-                if love.math.random() < chance then
-                    NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight-1,z+ly, 18)
-                end
-            end
-        end
-        local leafWidth = 1
-        for lx = -leafWidth, leafWidth do
-            for ly = -leafWidth, leafWidth do
-                local chance = 1
-                if math.abs(lx) == leafWidth and math.abs(ly) == leafWidth then
-                    chance = 0.5
-                end
-
-                if love.math.random() < chance then
-                    NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight,z+ly, 18)
-                end
-                if chance == 1 then
-                    NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight+1,z+ly, 18)
-                end
-            end
-        end
-    end
-
     -- iterate through chunk
     -- voxel data is stored in strings in a 2d array to simulate a 3d array of bytes
     for i=1, ChunkSize do
@@ -84,13 +43,13 @@ function DefaultGeneration(chunk, x,z)
                         else
                             grass = false
                             temp[yy] = string.char(2)
-                            if love.math.noise(xx/32,zz/32) > 0.9 and love.math.random() < 0.2 then
-                                temp[yy+2] = string.char(38)
-                            end
-                            if love.math.random() < love.math.noise(xx/64,zz/64)*0.02 and sunlight then
-                                genTree(i,j,k)
-                                temp[yy] = string.char(3)
-                            end
+                            -- if love.math.noise(xx/32,zz/32) > 0.9 and love.math.random() < 0.2 then
+                                -- temp[yy+2] = string.char(38)
+                            -- end
+                            -- if love.math.random() < love.math.noise(xx/64,zz/64)*0.02 and sunlight then
+                            --     genTree(i,j,k)
+                            --     temp[yy] = string.char(3)
+                            -- end
                         end
 
                         if sunlight then
@@ -230,6 +189,47 @@ function ClassicGeneration(chunk, x,z)
             end
 
             chunk.voxels[i][k] = table.concat(temp)
+        end
+    end
+end
+
+function GenerateTree(chunk, x,y,z)
+    local treeHeight = 4 + math.floor(love.math.random()*2 +0.5)
+
+    for tr = 1, treeHeight do
+        NewChunkRequest(chunk.x,chunk.z, x,y+tr,z, 17)
+    end
+
+    local leafWidth = 2
+    for lx = -leafWidth, leafWidth do
+        for ly = -leafWidth, leafWidth do
+            local chance = 1
+            if math.abs(lx) == leafWidth and math.abs(ly) == leafWidth then
+                chance = 0.5
+            end
+
+            if love.math.random() < chance then
+                NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight-2,z+ly, 18)
+            end
+            if love.math.random() < chance then
+                NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight-1,z+ly, 18)
+            end
+        end
+    end
+    local leafWidth = 1
+    for lx = -leafWidth, leafWidth do
+        for ly = -leafWidth, leafWidth do
+            local chance = 1
+            if math.abs(lx) == leafWidth and math.abs(ly) == leafWidth then
+                chance = 0.5
+            end
+
+            if love.math.random() < chance then
+                NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight,z+ly, 18)
+            end
+            if chance == 1 then
+                NewChunkRequest(chunk.x,chunk.z, x+lx,y+treeHeight+1,z+ly, 18)
+            end
         end
     end
 end

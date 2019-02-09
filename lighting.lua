@@ -63,13 +63,7 @@ function NewSunlightAdditionCreation(x,y,z)
 
         if TileSemiLightable(val)
         and dat > 0 then
-            -- cget:setVoxelFirstData(cx,cy,cz, self.value)
             NewSunlightForceAddition(self.x,self.y,self.z, dat)
-            -- NewSunlightAddition(self.x,self.y+1,self.z, dat-1)
-            -- NewSunlightAddition(self.x+1,self.y,self.z, dat-1)
-            -- NewSunlightAddition(self.x-1,self.y,self.z, dat-1)
-            -- NewSunlightAddition(self.x,self.y,self.z+1, dat-1)
-            -- NewSunlightAddition(self.x,self.y,self.z-1, dat-1)
         end
     end
 
@@ -186,7 +180,7 @@ function NewSunlightDownSubtraction(x,y,z)
             NewSunlightSubtraction(self.x-1,self.y,self.z, 15)
             NewSunlightSubtraction(self.x,self.y,self.z+1, 15)
             NewSunlightSubtraction(self.x,self.y,self.z-1, 15)
-            NewSunlightSubtraction(self.x,self.y,self.z, 15)
+            -- NewSunlightSubtraction(self.x,self.y-1,self.z, 15)
 
             return true
         end
