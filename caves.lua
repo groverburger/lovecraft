@@ -66,7 +66,7 @@ function NewCave(x,y,z)
         for i=-self.radius, self.radius do
             for j=-self.radius, self.radius do
                 for k=-self.radius, self.radius do
-                    if math.dist3d(i,j,k, 0,0,0) <= self.radius then
+                    if math.dist3d(i,j,k, 0,0,0) < self.radius then
                         local gx,gy,gz = self.x+i,self.y+j,self.z+k
                         local chunk, cx,cy,cz = GetChunk(gx,gy,gz)
 
@@ -75,7 +75,6 @@ function NewCave(x,y,z)
 
                             if cy == chunk.heightMap[cx][cz] then
                                 NewSunlightDownAddition(gx,gy,gz, 15)
-                                LightingUpdate()
                             end
                         end
                     end

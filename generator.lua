@@ -1,9 +1,7 @@
-function DefaultGeneration(chunk, x,z)
+function GenerateTerrain(chunk, x,z, generationFunction)
     -- chunk generation
     local dirt = 4
     local grass = true
-    local floor = 48
-    local ceiling = 120
 
     -- iterate through chunk
     -- voxel data is stored in strings in a 2d array to simulate a 3d array of bytes
@@ -26,13 +24,13 @@ function DefaultGeneration(chunk, x,z)
                     temp[yy+1] = string.char(15)
                 end
 
-                if j < floor then
+                if j < chunk.floor then
                     temp[yy] = string.char(1)
                     sunlight = false
                 else
                     temp[yy] = string.char(0)
 
-                    if ChunkNoise(xx,j,zz) > (j-floor)/(ceiling-floor)*(Noise2D(xx,zz, 128,5)*0.75 +0.75) then
+                    if generationFunction(chunk, xx,j,zz) then
                         if not grass then
                             if dirt > 0 then
                                 dirt = dirt - 1
@@ -43,13 +41,6 @@ function DefaultGeneration(chunk, x,z)
                         else
                             grass = false
                             temp[yy] = string.char(2)
-                            -- if love.math.noise(xx/32,zz/32) > 0.9 and love.math.random() < 0.2 then
-                                -- temp[yy+2] = string.char(38)
-                            -- end
-                            -- if love.math.random() < love.math.noise(xx/64,zz/64)*0.02 and sunlight then
-                            --     genTree(i,j,k)
-                            --     temp[yy] = string.char(3)
-                            -- end
                         end
 
                         if sunlight then
@@ -66,6 +57,10 @@ function DefaultGeneration(chunk, x,z)
             chunk.voxels[i][k] = table.concat(temp)
         end
     end
+end
+
+function StandardTerrain(chunk, xx,j,zz)
+    return ChunkNoise(xx,j,zz) > (j-chunk.floor)/(chunk.ceiling-chunk.floor)*(Noise2D(xx,zz, 128,5)*0.75 +0.75)
 end
 
 function ClassicGeneration(chunk, x,z)

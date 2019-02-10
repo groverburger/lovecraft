@@ -9,6 +9,9 @@ function NewChunk(x,z)
     chunk.heightMap = {}
     chunk.name = "chunk"
 
+    chunk.ceiling = 120
+    chunk.floor = 48
+
     -- store a list of voxels to be updated on next modelUpdate
     chunk.changes = {}
 
@@ -16,7 +19,7 @@ function NewChunk(x,z)
         chunk.heightMap[i] = {}
     end
 
-    DefaultGeneration(chunk, x,z)
+    GenerateTerrain(chunk, x,z, StandardTerrain)
 
     chunk.sunlight = function (self)
         for i=1, ChunkSize do
@@ -47,13 +50,16 @@ function NewChunk(x,z)
 
     -- process all requested blocks upon creation of chunk
     chunk.processRequests = function (self)
+        local queueSize = 0
+
         for i=1, #ChunkRequests do
             local request = ChunkRequests[i]
             if request.chunkx == self.x and request.chunky == self.z then
                 for j=1, #request.blocks do
                     local block = request.blocks[j]
                     if not TileCollisions(self:getVoxel(block.x,block.y,block.z)) then
-                        self:setVoxel(block.x,block.y,block.z, block.value)
+                        self:setVoxel(block.x,block.y,block.z, block.value, 15)
+                        queueSize = queueSize + #LightingRemovalQueue
                         LightingUpdate()
                     end
                 end
@@ -166,31 +172,31 @@ function NewChunk(x,z)
                     NewSunlightAdditionCreation(gx,gy,gz+1)
                     NewSunlightAdditionCreation(gx,gy,gz-1)
                 end
-
-                self:setVoxelFirstData(x,y,z, 0)
             else
                 -- if placed block remove sunlight around it
                 NewSunlightDownSubtraction(gx,gy-1,gz)
 
-                local nget = GetVoxelFirstData(gx,gy+1,gz)
-                if nget < 15 then
-                    NewSunlightSubtraction(gx,gy+1,gz, nget+1)
-                end
-                local nget = GetVoxelFirstData(gx+1,gy,gz)
-                if nget < 15 then
-                    NewSunlightSubtraction(gx+1,gy,gz, nget+1)
-                end
-                local nget = GetVoxelFirstData(gx-1,gy,gz)
-                if nget < 15 then
-                    NewSunlightSubtraction(gx-1,gy,gz, nget+1)
-                end
-                local nget = GetVoxelFirstData(gx,gy,gz+1)
-                if nget < 15 then
-                    NewSunlightSubtraction(gx,gy,gz+1, nget+1)
-                end
-                local nget = GetVoxelFirstData(gx,gy,gz-1)
-                if nget < 15 then
-                    NewSunlightSubtraction(gx,gy,gz-1, nget+1)
+                if not TileSemiLightable(value) then
+                    local nget = GetVoxelFirstData(gx,gy+1,gz)
+                    if nget < 15 then
+                        NewSunlightSubtraction(gx,gy+1,gz, nget+1)
+                    end
+                    local nget = GetVoxelFirstData(gx+1,gy,gz)
+                    if nget < 15 then
+                        NewSunlightSubtraction(gx+1,gy,gz, nget+1)
+                    end
+                    local nget = GetVoxelFirstData(gx-1,gy,gz)
+                    if nget < 15 then
+                        NewSunlightSubtraction(gx-1,gy,gz, nget+1)
+                    end
+                    local nget = GetVoxelFirstData(gx,gy,gz+1)
+                    if nget < 15 then
+                        NewSunlightSubtraction(gx,gy,gz+1, nget+1)
+                    end
+                    local nget = GetVoxelFirstData(gx,gy,gz-1)
+                    if nget < 15 then
+                        NewSunlightSubtraction(gx,gy,gz-1, nget+1)
+                    end
                 end
             end
 
@@ -563,7 +569,20 @@ function NewChunkRequest(chunkx,chunky, gx,gy,gz, valueg)
         local request = ChunkRequests[i]
         if request.chunkx == chunkx and request.chunky == chunky then
             foundMe = true
-            request.blocks[#request.blocks+1] = {x = lx, y = ly, z = lz, value = valueg}
+
+            local willOverride = false
+            for k=1, #request.blocks do
+                if request.blocks[k].x == lx
+                and request.blocks[k].y == ly
+                and request.blocks[k].z == lz then
+                    willOverride = true
+                end
+            end
+
+            if not willOverride then
+                request.blocks[#request.blocks+1] = {x = lx, y = ly, z = lz, value = valueg}
+            end
+
             break
         end
     end

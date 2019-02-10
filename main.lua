@@ -24,10 +24,6 @@ function love.load()
     LogicAccumulator = 0
     PhysicsStep = true
 
-    -- create scene object from SS3D engine
-    Scene = Engine.newScene(GraphicsWidth, GraphicsHeight)
-    Scene.camera.perspective = TransposeMatrix(cpml.mat4.from_perspective(90, love.graphics.getWidth()/love.graphics.getHeight(), 0.001, 10000))
-
     -- load assets
     DefaultTexture = love.graphics.newImage("assets/texture.png")
     TileTexture = love.graphics.newImage("assets/terrain.png")
@@ -91,17 +87,25 @@ function love.load()
     love.graphics.setColor(1,1,1)
     love.graphics.setCanvas()
 
-    -- global random numbers used for generation
-    Salt = {}
-    for i=1, 128 do
-        Salt[i] = love.math.random()
-    end
-
     -- global variables used in world generation
     ChunkSize = 16
     SliceHeight = 8
     WorldHeight = 128
     TileWidth, TileHeight = 1/16,1/16
+
+    GenerateWorld()
+end
+
+function GenerateWorld()
+    -- create scene object from SS3D engine
+    Scene = Engine.newScene(GraphicsWidth, GraphicsHeight)
+    Scene.camera.perspective = TransposeMatrix(cpml.mat4.from_perspective(90, love.graphics.getWidth()/love.graphics.getHeight(), 0.001, 10000))
+
+    -- global random numbers used for generation
+    Salt = {}
+    for i=1, 128 do
+        Salt[i] = love.math.random()
+    end
 
     -- initializing the update queue that holds all entities
     ThingList = {}
@@ -129,7 +133,16 @@ function love.load()
     CaveList = {}
     local worldSize = 4
 
-    print("generating")
+    StartTime = love.timer.getTime()
+    MeasureTime = StartTime
+    local timeDiff = function ()
+        local timeget = love.timer.getTime()
+        local ret = timeget - MeasureTime
+        MeasureTime = timeget
+
+        return ret
+    end
+
     for i=worldSize/-2 +1, worldSize/2 do
         ChunkHashTable[ChunkHash(i)] = {}
         for j=worldSize/-2 +1, worldSize/2 do
@@ -137,39 +150,47 @@ function love.load()
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)] = ChunkList[#ChunkList]
         end
     end
+    print("terrain: " .. timeDiff())
 
     for i=1, 32 do
         NewCave(rand(-32,32),rand(8,100),rand(-32,32))
     end
     UpdateCaves()
+    LightingUpdate()
+    print("caves: " .. timeDiff())
 
-    print("lighting")
     for i=worldSize/-2 +1, worldSize/2 do
         for j=worldSize/-2 +1, worldSize/2 do
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:sunlight()
         end
     end
+    print("queueSize: " .. #LightingQueue)
+    LightingUpdate()
+    print("lighting: " .. timeDiff())
 
-    print("populating")
     for i=worldSize/-2 +1, worldSize/2 do
         for j=worldSize/-2 +1, worldSize/2 do
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:populate()
         end
     end
+    print("populating: " .. timeDiff())
 
-    print("processing requests")
     for i=worldSize/-2 +1, worldSize/2 do
         for j=worldSize/-2 +1, worldSize/2 do
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:processRequests()
         end
     end
+    print("queueSize: " .. #LightingRemovalQueue)
+    print("processing requests: " .. timeDiff())
 
-    print("modelling")
     for i=worldSize/-2 +1, worldSize/2 do
         for j=worldSize/-2 +1, worldSize/2 do
             ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:initialize()
         end
     end
+    print("modelling: " .. timeDiff())
+
+    print("total generation time: " .. (love.timer.getTime() - StartTime))
 end
 
 -- convert an index into a point on a 2d plane of given width and height
@@ -444,6 +465,10 @@ end
 function love.keypressed(k)
     if k == "escape" then
         love.event.push("quit")
+    end
+
+    if k == "n" then
+        GenerateWorld()
     end
 
     -- simplified hotbar number press code, thanks nico-abram!
