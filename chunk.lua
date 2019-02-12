@@ -165,12 +165,12 @@ function NewChunk(x,z)
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
             local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
+            self:setVoxelSecondData(x,y,z, 0)
 
-            local destroyLocalLight = TileLightSource(value) == 0
+            local destroyLocalLight = false -- TileLightSource(value) == 0
             local sunlight = self:getVoxelFirstData(x,y+1,z)
             local sunget = self:getVoxel(x,y+1,z)
-            local isLightable = TileLightable(value)
-            if isLightable then
+            if TileLightable(value) then
                 -- if removed block or put in lightable block
                 if TileLightable(sunget) and sunlight == 15 then
                     NewSunlightDownAddition(gx,gy,gz, sunlight)
@@ -184,10 +184,12 @@ function NewChunk(x,z)
                 end
 
                 if localLight then
+                    destroyLocalLight = false
                     local source = TileLightSource(value)
                     if source > 0 then
                         NewLocalLightAddition(gx,gy,gz, source)
                     else
+                        print("success")
                         NewLocalLightAdditionCreation(gx+1,gy,gz)
                         NewLocalLightAdditionCreation(gx-1,gy,gz)
                         NewLocalLightAdditionCreation(gx,gy+1,gz)

@@ -307,7 +307,15 @@ function NewLocalLightAdditionCreation(x,y,z)
 
         if TileSemiLightable(val)
         and dat > 0 then
-            NewLocalLightForceAddition(self.x,self.y,self.z, dat)
+            -- NewLocalLightForceAddition(self.x,self.y,self.z, dat)
+            -- cget:setVoxelSecondData(cx,cy,cz, dat)
+            NewLocalLightAddition(self.x,self.y-1,self.z, dat-1)
+            NewLocalLightAddition(self.x,self.y+1,self.z, dat-1)
+            NewLocalLightAddition(self.x+1,self.y,self.z, dat-1)
+            NewLocalLightAddition(self.x-1,self.y,self.z, dat-1)
+            NewLocalLightAddition(self.x,self.y,self.z+1, dat-1)
+            NewLocalLightAddition(self.x,self.y,self.z-1, dat-1)
+            print("success 2")
         end
     end
 

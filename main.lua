@@ -402,7 +402,7 @@ function love.draw()
                 love.graphics.print("kB: "..math.floor(collectgarbage('count')),0,50)
             end
             love.graphics.print("FPS: "..love.timer.getFPS(), 0, 70)
-            love.graphics.print("#CaveList: "..#CaveList, 0, 90)
+            love.graphics.print("#LightingQueue: "..#LightingQueue, 0, 90)
             -- love.graphics.print("Press 'V' to toggle VSync", 0, 90)
             -- love.graphics.print("#ThingList: "..#ThingList, 0, 90)
             -- for i=1, #ThingList do
