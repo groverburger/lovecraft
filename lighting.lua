@@ -85,7 +85,6 @@ function NewSunlightForceAddition(x,y,z, value)
             return
         end
         local val = cget:getVoxel(cx,cy,cz)
-        local dat = cget:getVoxelFirstData(cx,cy,cz)
 
         if self.value >= 0
         and TileSemiLightable(val) then
@@ -315,7 +314,6 @@ function NewLocalLightAdditionCreation(x,y,z)
             NewLocalLightAddition(self.x-1,self.y,self.z, dat-1)
             NewLocalLightAddition(self.x,self.y,self.z+1, dat-1)
             NewLocalLightAddition(self.x,self.y,self.z-1, dat-1)
-            print("success 2")
         end
     end
 

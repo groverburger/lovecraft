@@ -22,7 +22,7 @@ function NewCave(x,y,z)
     t.x = x
     t.y = y
     t.z = z
-    t.lifeTimer = rand(48,128)
+    t.lifeTimer = rand(64,128)
 
     t.theta = love.math.random()*math.pi*2
     t.deltaTheta = 0

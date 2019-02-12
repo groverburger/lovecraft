@@ -23,9 +23,17 @@ function NewChunk(x,z)
 
     local gx,gz = (chunk.x-1)*ChunkSize + rand(0,15), (chunk.z-1)*ChunkSize + rand(0,15)
 
-    for i=1, 4 do
-        NewCave(gx,rand(8,100),gz)
+    if choose{true, false} then
+        local caveCount1 = rand(2,4)
+        for i=1, caveCount1 do
+            NewCave(gx,rand(8,64),gz)
+        end
+        local caveCount2 = rand(2,3)
+        for i=1, caveCount2 do
+            NewCave(gx,rand(48,80),gz)
+        end
     end
+
 
 
     chunk.sunlight = function (self)
@@ -165,7 +173,7 @@ function NewChunk(x,z)
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
             local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
-            self:setVoxelSecondData(x,y,z, 0)
+            self:setVoxelData(x,y,z, 0)
 
             local sunlight = self:getVoxelFirstData(x,y+1,z)
             local sunget = self:getVoxel(x,y+1,z)
@@ -188,7 +196,6 @@ function NewChunk(x,z)
                     if source > 0 then
                         NewLocalLightAddition(gx,gy,gz, source)
                     else
-                        print("success")
                         NewLocalLightAdditionCreation(gx+1,gy,gz)
                         NewLocalLightAdditionCreation(gx-1,gy,gz)
                         NewLocalLightAdditionCreation(gx,gy+1,gz)
@@ -201,7 +208,7 @@ function NewChunk(x,z)
                 -- if placed block remove sunlight around it
                 NewSunlightDownSubtraction(gx,gy-1,gz)
 
-                if not TileSemiLightable(value) then
+                if not TileSemiLightable(value) or localLight then
                     destroyLight = true
                     local nget = GetVoxelFirstData(gx,gy+1,gz)
                     if nget < 15 then
