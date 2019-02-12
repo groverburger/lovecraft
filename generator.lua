@@ -17,9 +17,11 @@ function GenerateTerrain(chunk, x,z, generationFunction)
             for j=WorldHeight, 1,-1 do
                 local xx = (x-1)*ChunkSize + i
                 local zz = (z-1)*ChunkSize + k
-                local yy = (j-1)*2 +1
+                local yy = (j-1)*TileDataSize +1
 
-                temp[yy+1] = string.char(0)
+                for a=1, TileDataSize-1 do
+                    temp[yy+a] = string.char(0)
+                end
                 if sunlight then
                     temp[yy+1] = string.char(15)
                 end

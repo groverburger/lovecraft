@@ -118,7 +118,9 @@ function NewChunk(x,z)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
-            return string.byte(self.voxels[x][z]:sub((y-1)*2 +1,(y-1)*2 +1)), string.byte(self.voxels[x][z]:sub((y-1)*2 +2,(y-1)*2 +2))
+            return string.byte(self.voxels[x][z]:sub((y-1)*TileDataSize +1,(y-1)*TileDataSize +1)),
+                string.byte(self.voxels[x][z]:sub((y-1)*TileDataSize +2,(y-1)*TileDataSize +2)),
+                string.byte(self.voxels[x][z]:sub((y-1)*TileDataSize +3,(y-1)*TileDataSize +3))
         end
 
         return 0, 0
@@ -131,7 +133,7 @@ function NewChunk(x,z)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
-            return string.byte(self.voxels[x][z]:sub((y-1)*2 +2,(y-1)*2 +2))%16
+            return string.byte(self.voxels[x][z]:sub((y-1)*TileDataSize +2,(y-1)*TileDataSize +2))
         end
 
         return 0
@@ -144,7 +146,7 @@ function NewChunk(x,z)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
-            return math.floor( string.byte(self.voxels[x][z]:sub((y-1)*2 +2,(y-1)*2 +2))/16 )
+            return string.byte(self.voxels[x][z]:sub((y-1)*TileDataSize +3,(y-1)*TileDataSize +3))
         end
 
         return 0
@@ -155,7 +157,7 @@ function NewChunk(x,z)
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
             local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
-            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value))
+            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*TileDataSize +1, string.char(value))
 
             self.changes[#self.changes+1] = {x,y,z}
         end
@@ -269,7 +271,7 @@ function NewChunk(x,z)
                 end
             end
 
-            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +1, string.char(value))
+            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*TileDataSize +1, string.char(value))
 
             self.changes[#self.changes+1] = {x,y,z}
         end
@@ -282,7 +284,7 @@ function NewChunk(x,z)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
-            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +2, string.char(value))
+            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*TileDataSize +2, string.char(value))
 
             self.changes[#self.changes+1] = {x,y,z}
         end
@@ -296,9 +298,7 @@ function NewChunk(x,z)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
-            local get = string.byte(self.voxels[x][z]:sub((y-1)*2 +2,(y-1)*2 +2))
-            local nvalue = math.floor(get/16)*16 + value
-            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +2, string.char(nvalue))
+            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*TileDataSize +2, string.char(value))
 
             self.changes[#self.changes+1] = {x,y,z}
         end
@@ -306,15 +306,10 @@ function NewChunk(x,z)
 
     -- local light data
     chunk.setVoxelSecondData = function (self, x,y,z, value)
-        x = math.floor(x)
-        y = math.floor(y)
-        z = math.floor(z)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
-            local get = string.byte(self.voxels[x][z]:sub((y-1)*2 +2,(y-1)*2 +2))
-            local nvalue = get%16 + value*16
-            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*2 +2, string.char(nvalue))
+            self.voxels[x][z] = ReplaceChar(self.voxels[x][z], (y-1)*TileDataSize +3, string.char(value))
 
             self.changes[#self.changes+1] = {x,y,z}
         end
@@ -429,9 +424,9 @@ function NewChunkSlice(x,y,z, parent)
         for i=1, ChunkSize do
             for j=self.y, self.y+SliceHeight-1 do
                 for k=1, ChunkSize do
-                    local this, thisData = self.parent:getVoxel(i,j,k)
-                    local thisSunlight = thisData%16
-                    local thisLocalLight = math.floor(thisData/16)
+                    local this, thisSunlight, thisLocalLight = self.parent:getVoxel(i,j,k)
+                    -- local thisSunlight = thisData%16
+                    -- local thisLocalLight = math.floor(thisData/16)
                     local thisLight = math.max(thisSunlight, thisLocalLight)
                     local thisTransparency = TileTransparency(this)
                     local scale = 1
