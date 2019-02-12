@@ -403,6 +403,7 @@ function love.draw()
             end
             love.graphics.print("FPS: "..love.timer.getFPS(), 0, 70)
             love.graphics.print("#LightingQueue: "..#LightingQueue, 0, 90)
+            love.graphics.print("#LightingRQueue: "..#LightingRemovalQueue, 0, 110)
             -- love.graphics.print("Press 'V' to toggle VSync", 0, 90)
             -- love.graphics.print("#ThingList: "..#ThingList, 0, 90)
             -- for i=1, #ThingList do

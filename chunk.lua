@@ -167,9 +167,9 @@ function NewChunk(x,z)
             local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
             self:setVoxelSecondData(x,y,z, 0)
 
-            local destroyLocalLight = false -- TileLightSource(value) == 0
             local sunlight = self:getVoxelFirstData(x,y+1,z)
             local sunget = self:getVoxel(x,y+1,z)
+            local destroyLight = false
             if TileLightable(value) then
                 -- if removed block or put in lightable block
                 if TileLightable(sunget) and sunlight == 15 then
@@ -184,7 +184,6 @@ function NewChunk(x,z)
                 end
 
                 if localLight then
-                    destroyLocalLight = false
                     local source = TileLightSource(value)
                     if source > 0 then
                         NewLocalLightAddition(gx,gy,gz, source)
@@ -201,9 +200,9 @@ function NewChunk(x,z)
             else
                 -- if placed block remove sunlight around it
                 NewSunlightDownSubtraction(gx,gy-1,gz)
-                destroyLocalLight = true
 
                 if not TileSemiLightable(value) then
+                    destroyLight = true
                     local nget = GetVoxelFirstData(gx,gy+1,gz)
                     if nget < 15 then
                         NewSunlightSubtraction(gx,gy+1,gz, nget+1)
@@ -224,40 +223,42 @@ function NewChunk(x,z)
                     if nget < 15 then
                         NewSunlightSubtraction(gx,gy,gz-1, nget+1)
                     end
+
                 end
             end
 
-            if localLight and destroyLocalLight then
-                if not TileSemiLightable(value) then
-                    local nget = GetVoxelSecondData(gx,gy+1,gz)
-                    if nget < 15 then
-                        NewLocalLightSubtraction(gx,gy+1,gz, nget+1)
-                    end
-                    local nget = GetVoxelSecondData(gx,gy-1,gz)
-                    if nget < 15 then
-                        NewLocalLightSubtraction(gx,gy-1,gz, nget+1)
-                    end
-                    local nget = GetVoxelSecondData(gx+1,gy,gz)
-                    if nget < 15 then
-                        NewLocalLightSubtraction(gx+1,gy,gz, nget+1)
-                    end
-                    local nget = GetVoxelSecondData(gx-1,gy,gz)
-                    if nget < 15 then
-                        NewLocalLightSubtraction(gx-1,gy,gz, nget+1)
-                    end
-                    local nget = GetVoxelSecondData(gx,gy,gz+1)
-                    if nget < 15 then
-                        NewLocalLightSubtraction(gx,gy,gz+1, nget+1)
-                    end
-                    local nget = GetVoxelSecondData(gx,gy,gz-1)
-                    if nget < 15 then
-                        NewLocalLightSubtraction(gx,gy,gz-1, nget+1)
-                    end
-                else
-                    if TileLightSource(self:getVoxel(x,y,z)) ~= 0 then
-                        local nget = self:getVoxelSecondData(x,y,z)
-                        NewLocalLightSubtraction(gx,gy,gz, nget+1)
-                    end
+            local source = TileLightSource(self:getVoxel(x,y,z))
+            if source > 0
+            and TileLightSource(value) == 0 then
+                NewLocalLightSubtraction(gx,gy,gz, source+1)
+                print('removal attempt '..source)
+                destroyLight = true
+            end
+
+            if localLight and destroyLight then
+                local nget = GetVoxelSecondData(gx,gy+1,gz)
+                if nget < 15 then
+                    NewLocalLightSubtraction(gx,gy+1,gz, nget+1)
+                end
+                local nget = GetVoxelSecondData(gx,gy-1,gz)
+                if nget < 15 then
+                    NewLocalLightSubtraction(gx,gy-1,gz, nget+1)
+                end
+                local nget = GetVoxelSecondData(gx+1,gy,gz)
+                if nget < 15 then
+                    NewLocalLightSubtraction(gx+1,gy,gz, nget+1)
+                end
+                local nget = GetVoxelSecondData(gx-1,gy,gz)
+                if nget < 15 then
+                    NewLocalLightSubtraction(gx-1,gy,gz, nget+1)
+                end
+                local nget = GetVoxelSecondData(gx,gy,gz+1)
+                if nget < 15 then
+                    NewLocalLightSubtraction(gx,gy,gz+1, nget+1)
+                end
+                local nget = GetVoxelSecondData(gx,gy,gz-1)
+                if nget < 15 then
+                    NewLocalLightSubtraction(gx,gy,gz-1, nget+1)
                 end
             end
 
