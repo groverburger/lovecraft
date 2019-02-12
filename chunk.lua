@@ -21,12 +21,18 @@ function NewChunk(x,z)
 
     GenerateTerrain(chunk, x,z, StandardTerrain)
 
+    local gx,gz = (chunk.x-1)*ChunkSize + rand(0,15), (chunk.z-1)*ChunkSize + rand(0,15)
+
+    for i=1, 4 do
+        NewCave(gx,rand(8,100),gz)
+    end
+
+
     chunk.sunlight = function (self)
         for i=1, ChunkSize do
             for j=1, ChunkSize do
-                local gx,gz = (x-1)*ChunkSize + i-1, (z-1)*ChunkSize + j-1
+                local gx,gz = (self.x-1)*ChunkSize + i-1, (self.z-1)*ChunkSize + j-1
                 local this = self.heightMap[i][j]
-                --print(gx,gz)
 
                 if i == 1 or this > self.heightMap[i-1][j]+1 then
                     NewSunlightDownAddition(gx-1,this,gz, 15)
@@ -130,7 +136,7 @@ function NewChunk(x,z)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
-            return math.floor( string.byte(self.voxels[x][z]:sub((y-1)*2 +2,(y-1)*2 +2))/16 )*16
+            return math.floor( string.byte(self.voxels[x][z]:sub((y-1)*2 +2,(y-1)*2 +2))/16 )
         end
 
         return 0
@@ -148,7 +154,10 @@ function NewChunk(x,z)
     end
 
     -- set voxel id of the voxel in this chunk's coordinate space
-    chunk.setVoxel = function (self, x,y,z, value,light)
+    chunk.setVoxel = function (self, x,y,z, value, localLight)
+        if localLight == nil then
+            localLight = false
+        end
         x = math.floor(x)
         y = math.floor(y)
         z = math.floor(z)
@@ -157,6 +166,7 @@ function NewChunk(x,z)
         and y >= 1 and y <= WorldHeight then
             local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
 
+            local destroyLocalLight = TileLightSource(value) == 0
             local sunlight = self:getVoxelFirstData(x,y+1,z)
             local sunget = self:getVoxel(x,y+1,z)
             local isLightable = TileLightable(value)
@@ -172,9 +182,24 @@ function NewChunk(x,z)
                     NewSunlightAdditionCreation(gx,gy,gz+1)
                     NewSunlightAdditionCreation(gx,gy,gz-1)
                 end
+
+                if localLight then
+                    local source = TileLightSource(value)
+                    if source > 0 then
+                        NewLocalLightAddition(gx,gy,gz, source)
+                    else
+                        NewLocalLightAdditionCreation(gx+1,gy,gz)
+                        NewLocalLightAdditionCreation(gx-1,gy,gz)
+                        NewLocalLightAdditionCreation(gx,gy+1,gz)
+                        NewLocalLightAdditionCreation(gx,gy-1,gz)
+                        NewLocalLightAdditionCreation(gx,gy,gz+1)
+                        NewLocalLightAdditionCreation(gx,gy,gz-1)
+                    end
+                end
             else
                 -- if placed block remove sunlight around it
                 NewSunlightDownSubtraction(gx,gy-1,gz)
+                destroyLocalLight = true
 
                 if not TileSemiLightable(value) then
                     local nget = GetVoxelFirstData(gx,gy+1,gz)
@@ -196,6 +221,40 @@ function NewChunk(x,z)
                     local nget = GetVoxelFirstData(gx,gy,gz-1)
                     if nget < 15 then
                         NewSunlightSubtraction(gx,gy,gz-1, nget+1)
+                    end
+                end
+            end
+
+            if localLight and destroyLocalLight then
+                if not TileSemiLightable(value) then
+                    local nget = GetVoxelSecondData(gx,gy+1,gz)
+                    if nget < 15 then
+                        NewLocalLightSubtraction(gx,gy+1,gz, nget+1)
+                    end
+                    local nget = GetVoxelSecondData(gx,gy-1,gz)
+                    if nget < 15 then
+                        NewLocalLightSubtraction(gx,gy-1,gz, nget+1)
+                    end
+                    local nget = GetVoxelSecondData(gx+1,gy,gz)
+                    if nget < 15 then
+                        NewLocalLightSubtraction(gx+1,gy,gz, nget+1)
+                    end
+                    local nget = GetVoxelSecondData(gx-1,gy,gz)
+                    if nget < 15 then
+                        NewLocalLightSubtraction(gx-1,gy,gz, nget+1)
+                    end
+                    local nget = GetVoxelSecondData(gx,gy,gz+1)
+                    if nget < 15 then
+                        NewLocalLightSubtraction(gx,gy,gz+1, nget+1)
+                    end
+                    local nget = GetVoxelSecondData(gx,gy,gz-1)
+                    if nget < 15 then
+                        NewLocalLightSubtraction(gx,gy,gz-1, nget+1)
+                    end
+                else
+                    if TileLightSource(self:getVoxel(x,y,z)) ~= 0 then
+                        local nget = self:getVoxelSecondData(x,y,z)
+                        NewLocalLightSubtraction(gx,gy,gz, nget+1)
                     end
                 end
             end
@@ -360,7 +419,10 @@ function NewChunkSlice(x,y,z, parent)
         for i=1, ChunkSize do
             for j=self.y, self.y+SliceHeight-1 do
                 for k=1, ChunkSize do
-                    local this, thisLight = self.parent:getVoxel(i,j,k)
+                    local this, thisData = self.parent:getVoxel(i,j,k)
+                    local thisSunlight = thisData%16
+                    local thisLocalLight = math.floor(thisData/16)
+                    local thisLight = math.max(thisSunlight, thisLocalLight)
                     local thisTransparency = TileTransparency(this)
                     local scale = 1
                     local x,y,z = (self.x-1)*ChunkSize + i-1, 1*j*scale, (self.z-1)*ChunkSize + k-1

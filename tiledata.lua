@@ -35,6 +35,14 @@ function TileTransparency(n)
     return 3 -- solid (opaque)
 end
 
+function TileLightSource(n)
+    if n == 20 then -- glass
+        return 15
+    end
+
+    return 0
+end
+
 function TileLightable(n)
     local t = TileTransparency(n)
     return t == 0 or t == 2

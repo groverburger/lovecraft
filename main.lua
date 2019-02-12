@@ -152,41 +152,51 @@ function GenerateWorld()
     end
     print("terrain: " .. timeDiff())
 
-    for i=1, 32 do
-        NewCave(rand(-32,32),rand(8,100),rand(-32,32))
-    end
     UpdateCaves()
     LightingUpdate()
     print("caves: " .. timeDiff())
 
-    for i=worldSize/-2 +1, worldSize/2 do
-        for j=worldSize/-2 +1, worldSize/2 do
-            ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:sunlight()
-        end
+    -- for i=worldSize/-2 +1, worldSize/2 do
+    --     for j=worldSize/-2 +1, worldSize/2 do
+    --         ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:sunlight()
+    --     end
+    -- end
+
+    for i=1, #ChunkList do
+        ChunkList[i]:sunlight()
     end
     print("queueSize: " .. #LightingQueue)
     LightingUpdate()
     print("lighting: " .. timeDiff())
 
-    for i=worldSize/-2 +1, worldSize/2 do
-        for j=worldSize/-2 +1, worldSize/2 do
-            ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:populate()
-        end
+    -- for i=worldSize/-2 +1, worldSize/2 do
+    --     for j=worldSize/-2 +1, worldSize/2 do
+    --         ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:populate()
+    --     end
+    -- end
+    for i=1, #ChunkList do
+        ChunkList[i]:populate()
     end
     print("populating: " .. timeDiff())
 
-    for i=worldSize/-2 +1, worldSize/2 do
-        for j=worldSize/-2 +1, worldSize/2 do
-            ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:processRequests()
-        end
+    -- for i=worldSize/-2 +1, worldSize/2 do
+    --     for j=worldSize/-2 +1, worldSize/2 do
+    --         ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:processRequests()
+    --     end
+    -- end
+    for i=1, #ChunkList do
+        ChunkList[i]:processRequests()
     end
     print("queueSize: " .. #LightingRemovalQueue)
     print("processing requests: " .. timeDiff())
 
-    for i=worldSize/-2 +1, worldSize/2 do
-        for j=worldSize/-2 +1, worldSize/2 do
-            ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:initialize()
-        end
+    -- for i=worldSize/-2 +1, worldSize/2 do
+    --     for j=worldSize/-2 +1, worldSize/2 do
+    --         ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:initialize()
+    --     end
+    -- end
+    for i=1, #ChunkList do
+        ChunkList[i]:initialize()
     end
     print("modelling: " .. timeDiff())
 
@@ -452,7 +462,7 @@ function love.mousepressed(x,y, b)
     local cx,cy,cz = pos.x, pos.y, pos.z
     local chunk = pos.chunk
     if chunk ~= nil and ThePlayer.cursorpos.chunk ~= nil and ThePlayer.cursorHit then
-        chunk:setVoxel(cx,cy,cz, value)
+        chunk:setVoxel(cx,cy,cz, value,true)
         LightingUpdate()
         UpdateChangedChunks()
         --chunk:updateModel(cx,cy,cz)

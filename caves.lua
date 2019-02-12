@@ -29,7 +29,7 @@ function NewCave(x,y,z)
     t.phi = love.math.random()*math.pi*2
     t.deltaPhi = 0
 
-    t.radius = 3
+    t.radius = rand(1.5,3, 0.5)
     t.carveIndex = 0
 
     t.query = function (self)
@@ -66,7 +66,7 @@ function NewCave(x,y,z)
         for i=-self.radius, self.radius do
             for j=-self.radius, self.radius do
                 for k=-self.radius, self.radius do
-                    if math.dist3d(i,j,k, 0,0,0) < self.radius then
+                    if math.dist3d(i,j,k, 0,0,0)+love.math.random()/2 < self.radius then
                         local gx,gy,gz = self.x+i,self.y+j,self.z+k
                         local chunk, cx,cy,cz = GetChunk(gx,gy,gz)
 
