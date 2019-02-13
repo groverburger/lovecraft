@@ -279,6 +279,7 @@ function NewChunk(x,z)
                     end
                 end
 
+                -- fill empty local light values when placed semi lightable block
                 if TileSemiLightable(value) then
                     NewLocalLightAdditionCreation(gx+1,gy,gz)
                     NewLocalLightAdditionCreation(gx-1,gy,gz)

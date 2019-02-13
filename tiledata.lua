@@ -32,11 +32,15 @@ function TileTransparency(n)
         return 2
     end
 
+    if n == 89 then -- glowstone (technically very transparent)
+        return 2
+    end
+
     return 3 -- solid (opaque)
 end
 
 function TileLightSource(n)
-    if n == 20 then -- glass
+    if n == 89 then -- glowstone
         return 15
     end
 
@@ -82,6 +86,7 @@ function TileTextures(n)
     list[38] = {13} -- 37 yellow flower
     list[39] = {12} -- 38 rose
     list[46] = {7} -- 18 leaves
+    list[90] = {105} -- 89 glowstone
 
     -- transforms the list into base 0 to accomodate for air blocks
     return list[n+1]

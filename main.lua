@@ -124,6 +124,7 @@ function GenerateWorld()
     PlayerInventory.items[6] = 17
     PlayerInventory.items[7] = 18
     PlayerInventory.items[8] = 20
+    PlayerInventory.items[9] = 89
 
     -- generate the world, store in 2d hash table
     ChunkHashTable = {}
