@@ -303,8 +303,7 @@ function NewLocalLightForceAddition(x,y,z, value)
         if cget == nil then
             return
         end
-        local val = cget:getVoxel(cx,cy,cz)
-        local dat = cget:getVoxelSecondData(cx,cy,cz)
+        local val, dis, dat = cget:getVoxel(cx,cy,cz)
 
         if self.value >= 0
         and TileSemiLightable(val) then
@@ -332,19 +331,18 @@ function NewLocalLightAdditionCreation(x,y,z)
         if cget == nil then
             return
         end
-        local val = cget:getVoxel(cx,cy,cz)
-        local dat = cget:getVoxelSecondData(cx,cy,cz)
+        local val, dis, dat = cget:getVoxel(cx,cy,cz)
 
         if TileSemiLightable(val)
         and dat > 0 then
             -- NewLocalLightForceAddition(self.x,self.y,self.z, dat)
             -- cget:setVoxelSecondData(cx,cy,cz, dat)
-            NewLocalLightAddition(self.x,self.y-1,self.z, dat-1)
-            NewLocalLightAddition(self.x,self.y+1,self.z, dat-1)
-            NewLocalLightAddition(self.x+1,self.y,self.z, dat-1)
-            NewLocalLightAddition(self.x-1,self.y,self.z, dat-1)
-            NewLocalLightAddition(self.x,self.y,self.z+1, dat-1)
-            NewLocalLightAddition(self.x,self.y,self.z-1, dat-1)
+            NewLocalLightForceAddition(self.x,self.y,self.z, dat)
+            -- NewLocalLightForceAddition(self.x,self.y+1,self.z, dat-1)
+            -- NewLocalLightForceAddition(self.x+1,self.y,self.z, dat-1)
+            -- NewLocalLightForceAddition(self.x-1,self.y,self.z, dat-1)
+            -- NewLocalLightForceAddition(self.x,self.y,self.z+1, dat-1)
+            -- NewLocalLightForceAddition(self.x,self.y,self.z-1, dat-1)
         end
     end
 

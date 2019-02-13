@@ -164,9 +164,9 @@ function NewChunk(x,z)
     end
 
     -- set voxel id of the voxel in this chunk's coordinate space
-    chunk.setVoxel = function (self, x,y,z, value, localLight)
-        if localLight == nil then
-            localLight = false
+    chunk.setVoxel = function (self, x,y,z, value, manuallyPlaced)
+        if manuallyPlaced == nil then
+            manuallyPlaced = false
         end
         x = math.floor(x)
         y = math.floor(y)
@@ -175,14 +175,17 @@ function NewChunk(x,z)
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
             local gx,gy,gz = (self.x-1)*ChunkSize + x-1, y, (self.z-1)*ChunkSize + z-1
-            self:setVoxelData(x,y,z, 0)
+            self:setVoxelFirstData(x,y,z, 0)
+            self:setVoxelSecondData(x,y,z, 0)
 
             local sunlight = self:getVoxelFirstData(x,y+1,z)
             local sunget = self:getVoxel(x,y+1,z)
+
+            local inDirectSunlight = TileLightable(sunget) and sunlight == 15
             local destroyLight = false
             if TileLightable(value) then
                 -- if removed block or put in lightable block
-                if TileLightable(sunget) and sunlight == 15 then
+                if inDirectSunlight then
                     NewSunlightDownAddition(gx,gy,gz, sunlight)
                 else
                     NewSunlightAdditionCreation(gx+1,gy,gz)
@@ -193,7 +196,7 @@ function NewChunk(x,z)
                     NewSunlightAdditionCreation(gx,gy,gz-1)
                 end
 
-                if localLight then
+                if manuallyPlaced then
                     local source = TileLightSource(value)
                     if source > 0 then
                         NewLocalLightAddition(gx,gy,gz, source)
@@ -207,11 +210,17 @@ function NewChunk(x,z)
                     end
                 end
             else
-                -- if placed block remove sunlight around it
+                -- if placed block remove sunlight beneath it
                 NewSunlightDownSubtraction(gx,gy-1,gz)
 
-                if not TileSemiLightable(value) or localLight then
-                    destroyLight = true
+                if TileSemiLightable(value) and inDirectSunlight and manuallyPlaced then
+                    NewSunlightAdditionCreation(gx,gy+1,gz)
+                end
+
+                if not TileSemiLightable(value) or manuallyPlaced then
+                    -- don't destroy local light if semi lightable
+                    destroyLight = not TileSemiLightable(value)
+
                     local nget = GetVoxelFirstData(gx,gy+1,gz)
                     if nget < 15 then
                         NewSunlightSubtraction(gx,gy+1,gz, nget+1)
@@ -232,7 +241,6 @@ function NewChunk(x,z)
                     if nget < 15 then
                         NewSunlightSubtraction(gx,gy,gz-1, nget+1)
                     end
-
                 end
             end
 
@@ -240,34 +248,44 @@ function NewChunk(x,z)
             if source > 0
             and TileLightSource(value) == 0 then
                 NewLocalLightSubtraction(gx,gy,gz, source+1)
-                print('removal attempt '..source)
                 destroyLight = true
             end
 
-            if localLight and destroyLight then
-                local nget = GetVoxelSecondData(gx,gy+1,gz)
-                if nget < 15 then
-                    NewLocalLightSubtraction(gx,gy+1,gz, nget+1)
+            if manuallyPlaced then
+                if destroyLight then
+                    local nget = GetVoxelSecondData(gx,gy+1,gz)
+                    if nget < 15 then
+                        NewLocalLightSubtraction(gx,gy+1,gz, nget+1)
+                    end
+                    local nget = GetVoxelSecondData(gx,gy-1,gz)
+                    if nget < 15 then
+                        NewLocalLightSubtraction(gx,gy-1,gz, nget+1)
+                    end
+                    local nget = GetVoxelSecondData(gx+1,gy,gz)
+                    if nget < 15 then
+                        NewLocalLightSubtraction(gx+1,gy,gz, nget+1)
+                    end
+                    local nget = GetVoxelSecondData(gx-1,gy,gz)
+                    if nget < 15 then
+                        NewLocalLightSubtraction(gx-1,gy,gz, nget+1)
+                    end
+                    local nget = GetVoxelSecondData(gx,gy,gz+1)
+                    if nget < 15 then
+                        NewLocalLightSubtraction(gx,gy,gz+1, nget+1)
+                    end
+                    local nget = GetVoxelSecondData(gx,gy,gz-1)
+                    if nget < 15 then
+                        NewLocalLightSubtraction(gx,gy,gz-1, nget+1)
+                    end
                 end
-                local nget = GetVoxelSecondData(gx,gy-1,gz)
-                if nget < 15 then
-                    NewLocalLightSubtraction(gx,gy-1,gz, nget+1)
-                end
-                local nget = GetVoxelSecondData(gx+1,gy,gz)
-                if nget < 15 then
-                    NewLocalLightSubtraction(gx+1,gy,gz, nget+1)
-                end
-                local nget = GetVoxelSecondData(gx-1,gy,gz)
-                if nget < 15 then
-                    NewLocalLightSubtraction(gx-1,gy,gz, nget+1)
-                end
-                local nget = GetVoxelSecondData(gx,gy,gz+1)
-                if nget < 15 then
-                    NewLocalLightSubtraction(gx,gy,gz+1, nget+1)
-                end
-                local nget = GetVoxelSecondData(gx,gy,gz-1)
-                if nget < 15 then
-                    NewLocalLightSubtraction(gx,gy,gz-1, nget+1)
+
+                if TileSemiLightable(value) then
+                    NewLocalLightAdditionCreation(gx+1,gy,gz)
+                    NewLocalLightAdditionCreation(gx-1,gy,gz)
+                    NewLocalLightAdditionCreation(gx,gy+1,gz)
+                    NewLocalLightAdditionCreation(gx,gy-1,gz)
+                    NewLocalLightAdditionCreation(gx,gy,gz+1)
+                    NewLocalLightAdditionCreation(gx,gy,gz-1)
                 end
             end
 
