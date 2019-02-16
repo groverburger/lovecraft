@@ -216,32 +216,10 @@ function NewLocalLightAddition(x,y,z, value)
             chunk:setVoxelSecondData(cx,cy,cz, value)
             self:add(x,y-1,z, value-1, chunk)
             self:add(x,y+1,z, value-1, chunk)
-
-            local ccx,ccy = ToChunkCoords(x,z)
-            local ccx2,ccy2 = ToChunkCoords(x+1,z)
-            local nextChunk = chunk
-            if ccx2 ~= ccx then
-                nextChunk = nil
-            end
-            self:add(x+1,y,z, value-1, nextChunk)
-            local ccx2,ccy2 = ToChunkCoords(x-1,z)
-            local nextChunk = chunk
-            if ccx2 ~= ccx then
-                nextChunk = nil
-            end
-            self:add(x-1,y,z, value-1, nextChunk)
-            local ccx2,ccy2 = ToChunkCoords(x,z+1)
-            local nextChunk = chunk
-            if ccy2 ~= ccy then
-                nextChunk = nil
-            end
-            self:add(x,y,z+1, value-1, nextChunk)
-            local ccx2,ccy2 = ToChunkCoords(x,z-1)
-            local nextChunk = chunk
-            if ccy2 ~= ccy then
-                nextChunk = nil
-            end
-            self:add(x,y,z-1, value-1, nextChunk)
+            self:add(x+1,y,z, value-1, nil)
+            self:add(x-1,y,z, value-1, nil)
+            self:add(x,y,z+1, value-1, nil)
+            self:add(x,y,z-1, value-1, nil)
         end
     end
 

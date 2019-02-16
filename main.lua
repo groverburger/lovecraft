@@ -158,12 +158,6 @@ function GenerateWorld()
     LightingUpdate()
     print("caves: " .. timeDiff())
 
-    -- for i=worldSize/-2 +1, worldSize/2 do
-    --     for j=worldSize/-2 +1, worldSize/2 do
-    --         ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:sunlight()
-    --     end
-    -- end
-
     for i=1, #ChunkList do
         ChunkList[i]:sunlight()
     end
@@ -171,32 +165,17 @@ function GenerateWorld()
     LightingUpdate()
     print("lighting: " .. timeDiff())
 
-    -- for i=worldSize/-2 +1, worldSize/2 do
-    --     for j=worldSize/-2 +1, worldSize/2 do
-    --         ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:populate()
-    --     end
-    -- end
     for i=1, #ChunkList do
         ChunkList[i]:populate()
     end
     print("populating: " .. timeDiff())
 
-    -- for i=worldSize/-2 +1, worldSize/2 do
-    --     for j=worldSize/-2 +1, worldSize/2 do
-    --         ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:processRequests()
-    --     end
-    -- end
     for i=1, #ChunkList do
         ChunkList[i]:processRequests()
     end
     print("queueSize: " .. #LightingRemovalQueue)
     print("processing requests: " .. timeDiff())
 
-    -- for i=worldSize/-2 +1, worldSize/2 do
-    --     for j=worldSize/-2 +1, worldSize/2 do
-    --         ChunkHashTable[ChunkHash(i)][ChunkHash(j)]:initialize()
-    --     end
-    -- end
     for i=1, #ChunkList do
         ChunkList[i]:initialize()
     end

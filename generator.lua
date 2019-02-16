@@ -65,6 +65,26 @@ function StandardTerrain(chunk, xx,j,zz)
     return ChunkNoise(xx,j,zz) > (j-chunk.floor)/(chunk.ceiling-chunk.floor)*(Noise2D(xx,zz, 128,5)*0.75 +0.75)
 end
 
+function ClassicTerrain(chunk, xx,j,zz)
+    local scalar = 1.3
+    local heightLow = (OctaveNoise(xx*scalar, zz*scalar, 8, 2,3) + OctaveNoise(xx*scalar, zz*scalar, 8, 4,5))/6 -4
+    local heightHigh = (OctaveNoise(xx*scalar, zz*scalar, 8, 6,7) + OctaveNoise(xx*scalar, zz*scalar, 8, 8,9))/5 -6
+    local heightResult = heightLow
+
+    if OctaveNoise(xx,zz, 6, 10,11)/8 <= 0 then
+        heightResult = math.max(heightLow, heightHigh)
+    end
+
+    heightResult = heightResult * 0.5
+    if heightResult < 0 then
+        heightResult = heightResult * 0.8
+    end
+
+    heightResult = heightResult + 64 -- water level
+
+    return j <= heightResult --ChunkNoise(xx,j,zz) > (j-chunk.floor)/(chunk.ceiling-chunk.floor)*(Noise2D(xx,zz, 128,5)*0.75 +0.75)
+end
+
 function ClassicGeneration(chunk, x,z)
     -- chunk generation
     local dirt = 4
@@ -243,37 +263,16 @@ function Noise2D(x,z, freq,si)
     return love.math.noise(x/freq + Salt[si]*100000,z/freq + Salt[si+2]*100000)
 end
 
-function NewOctaveNoise(octaves, seed1,seed2)
-    local t = {}
-    t.octaves = octaves
-    t.seed1 = seed1
-    t.seed2 = seed2
+function OctaveNoise(x,y, octaves, seed1,seed2)
+    local ret = 0
 
-    t.query = function (self, x,y)
-        local ret = 0
-
-        local freq = 1
-        local amp = 1
-        for i=1, self.octaves do
-            ret = ret + love.math.noise(x*freq + Salt[self.seed1]*100000,y*freq + Salt[self.seed2]*100000)*amp -amp/2
-            freq = freq * 0.5
-            amp = amp * 2
-        end
-
-        return ret
+    local freq = 1
+    local amp = 1
+    for i=1, octaves do
+        ret = ret + love.math.noise(x*freq + Salt[seed1]*100000,y*freq + Salt[seed2]*100000)*amp -amp/2
+        freq = freq * 0.5
+        amp = amp * 2
     end
 
-    return t
-end
-
-function NewCombinedNoise(noise1,noise2)
-    local t = {}
-    t.noise1 = noise1
-    t.noise2 = noise2
-
-    t.query = function (self, x,y)
-        return self.noise1:query(x,y) + self.noise2:query(x,y)
-    end
-
-    return t
+    return ret
 end

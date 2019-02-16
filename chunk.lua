@@ -123,7 +123,7 @@ function NewChunk(x,z)
                 string.byte(self.voxels[x][z]:sub((y-1)*TileDataSize +3,(y-1)*TileDataSize +3))
         end
 
-        return 0, 0
+        return 0, 0, 0
     end
 
     chunk.getVoxelFirstData = function (self, x,y,z)
@@ -182,6 +182,7 @@ function NewChunk(x,z)
             local sunget = self:getVoxel(x,y+1,z)
 
             local inDirectSunlight = TileLightable(sunget) and sunlight == 15
+            local placingLocalSource = false
             local destroyLight = false
             if TileLightable(value) then
                 -- if removed block or put in lightable block
@@ -200,6 +201,7 @@ function NewChunk(x,z)
                     local source = TileLightSource(value)
                     if source > 0 then
                         NewLocalLightAddition(gx,gy,gz, source)
+                        placingLocalSource = true
                     else
                         NewLocalLightAdditionCreation(gx+1,gy,gz)
                         NewLocalLightAdditionCreation(gx-1,gy,gz)
@@ -280,7 +282,7 @@ function NewChunk(x,z)
                 end
 
                 -- fill empty local light values when placed semi lightable block
-                if TileSemiLightable(value) then
+                if TileSemiLightable(value) and not placingLocalSource then
                     NewLocalLightAdditionCreation(gx+1,gy,gz)
                     NewLocalLightAdditionCreation(gx-1,gy,gz)
                     NewLocalLightAdditionCreation(gx,gy+1,gz)
