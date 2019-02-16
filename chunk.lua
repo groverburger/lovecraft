@@ -11,6 +11,7 @@ function NewChunk(x,z)
 
     chunk.ceiling = 120
     chunk.floor = 48
+    chunk.requests = {}
 
     -- store a list of voxels to be updated on next modelUpdate
     chunk.changes = {}
@@ -24,17 +25,15 @@ function NewChunk(x,z)
     local gx,gz = (chunk.x-1)*ChunkSize + rand(0,15), (chunk.z-1)*ChunkSize + rand(0,15)
 
     if choose{true, false} then
-        local caveCount1 = rand(2,4)
+        local caveCount1 = rand(1,3)
         for i=1, caveCount1 do
             NewCave(gx,rand(8,64),gz)
         end
-        local caveCount2 = rand(2,3)
+        local caveCount2 = rand(1,2)
         for i=1, caveCount2 do
             NewCave(gx,rand(48,80),gz)
         end
     end
-
-
 
     chunk.sunlight = function (self)
         for i=1, ChunkSize do
@@ -64,19 +63,11 @@ function NewChunk(x,z)
 
     -- process all requested blocks upon creation of chunk
     chunk.processRequests = function (self)
-        local queueSize = 0
-
-        for i=1, #ChunkRequests do
-            local request = ChunkRequests[i]
-            if request.chunkx == self.x and request.chunky == self.z then
-                for j=1, #request.blocks do
-                    local block = request.blocks[j]
-                    if not TileCollisions(self:getVoxel(block.x,block.y,block.z)) then
-                        self:setVoxel(block.x,block.y,block.z, block.value, 15)
-                        queueSize = queueSize + #LightingRemovalQueue
-                        LightingUpdate()
-                    end
-                end
+        for j=1, #self.requests do
+            local block = self.requests[j]
+            if not TileCollisions(self:getVoxel(block.x,block.y,block.z)) then
+                self:setVoxel(block.x,block.y,block.z, block.value, 15)
+                LightingUpdate()
             end
         end
     end
@@ -636,51 +627,12 @@ end
 
 -- used for building structures across chunk borders
 -- by requesting a block to be built in a chunk that does not yet exist
-function NewChunkRequest(chunkx,chunky, gx,gy,gz, valueg)
+function NewChunkRequest(gx,gy,gz, valueg)
     -- assume structures can only cross one chunk
-    if gx < 1 then
-        chunkx = chunkx-1
-    end
-    if gx > ChunkSize then
-        chunkx = chunkx+1
-    end
-    if gz < 1 then
-        chunky = chunky-1
-    end
-    if gz > ChunkSize then
-        chunky = chunky+1
-    end
-    local lx,ly,lz = (gx-1)%ChunkSize +1, gy, (gz-1)%ChunkSize +1
+    local lx,ly,lz = Localize(gx,gy,gz)
+    local chunk = GetChunk(gx,gy,gz)
 
-    local foundMe = false
-    for i=1, #ChunkRequests do
-        local request = ChunkRequests[i]
-        if request.chunkx == chunkx and request.chunky == chunky then
-            foundMe = true
-
-            local willOverride = false
-            for k=1, #request.blocks do
-                if request.blocks[k].x == lx
-                and request.blocks[k].y == ly
-                and request.blocks[k].z == lz then
-                    willOverride = true
-                end
-            end
-
-            if not willOverride then
-                request.blocks[#request.blocks+1] = {x = lx, y = ly, z = lz, value = valueg}
-            end
-
-            break
-        end
-    end
-
-    if not foundMe then
-        ChunkRequests[#ChunkRequests +1] = {}
-        local request = ChunkRequests[#ChunkRequests]
-        request.chunkx = chunkx
-        request.chunky = chunky
-        request.blocks = {}
-        request.blocks[1] = {x = lx, y = ly, z = lz, value = valueg}
+    if chunk ~= nil then
+        chunk.requests[#chunk.requests+1] = {x = lx, y = ly, z = lz, value = valueg}
     end
 end

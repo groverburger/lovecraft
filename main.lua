@@ -204,6 +204,9 @@ end
 function Localize(x,y,z)
     return x%ChunkSize +1, y, z%ChunkSize +1
 end
+function Globalize(cx,cz, x,y,z)
+    return (cx-1)*ChunkSize + x-1, y, (cz-1)*ChunkSize + z-1
+end
 
 function ToChunkCoords(x,z)
     return math.floor(x/ChunkSize)+1, math.floor(z/ChunkSize)+1

@@ -22,14 +22,14 @@ function NewCave(x,y,z)
     t.x = x
     t.y = y
     t.z = z
-    t.lifeTimer = rand(64,128)
+    t.lifeTimer = rand(64,256)
 
     t.theta = love.math.random()*math.pi*2
     t.deltaTheta = 0
     t.phi = love.math.random()*math.pi*2
     t.deltaPhi = 0
 
-    t.radius = rand(2,3, 0.5)
+    t.radius = rand(2,3, 0.1)
     t.carveIndex = 0
 
     t.query = function (self)
