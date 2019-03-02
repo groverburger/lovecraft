@@ -199,34 +199,27 @@ function NewLocalLightAddition(x,y,z, value)
     t.z = z
     t.value = value
 
-    t.add = function (self, x,y,z, value, chunk)
+    t.query = function (self)--, x,y,z, value, chunk)
+        local chunk = GetChunk(self.x,self.y,self.z)
         if chunk == nil then
-            local cget = GetChunk(x,y,z)
-            if cget == nil then
-                return
-            end
-            chunk = cget
+            return
         end
-        local cx,cy,cz = Localize(x,y,z)
+        local cx,cy,cz = Localize(self.x,self.y,self.z)
         local val, dis, dat = chunk:getVoxel(cx,cy,cz)
 
-        if value >= 0
-        and TileSemiLightable(val)
-        and dat < value then
-            chunk:setVoxelSecondData(cx,cy,cz, value)
-            self:add(x,y-1,z, value-1, chunk)
-            self:add(x,y+1,z, value-1, chunk)
-            self:add(x+1,y,z, value-1, nil)
-            self:add(x-1,y,z, value-1, nil)
-            self:add(x,y,z+1, value-1, nil)
-            self:add(x,y,z-1, value-1, nil)
-        end
-    end
+        if TileSemiLightable(val)
+        and dat < self.value then
+            chunk:setVoxelSecondData(cx,cy,cz, self.value)
 
-    t.query = function (self)
-        local time = love.timer.getTime()
-        self:add(self.x,self.y,self.z, self.value, nil)
-        print(love.timer.getTime() - time)
+            if self.value > 1 then
+                NewLocalLightAddition(self.x,self.y-1,self.z, self.value-1)
+                NewLocalLightAddition(self.x,self.y+1,self.z, self.value-1)
+                NewLocalLightAddition(self.x+1,self.y,self.z, self.value-1)
+                NewLocalLightAddition(self.x-1,self.y,self.z, self.value-1)
+                NewLocalLightAddition(self.x,self.y,self.z+1, self.value-1)
+                NewLocalLightAddition(self.x,self.y,self.z-1, self.value-1)
+            end
+        end
     end
 
     LightingQueueAdd(t)

@@ -318,6 +318,9 @@ function NewChunk(x,z)
 
     -- local light data
     chunk.setVoxelSecondData = function (self, x,y,z, value)
+        x = math.floor(x)
+        y = math.floor(y)
+        z = math.floor(z)
         if x <= ChunkSize and x >= 1
         and z <= ChunkSize and z >= 1
         and y >= 1 and y <= WorldHeight then
